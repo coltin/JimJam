@@ -15,6 +15,9 @@ Todo
 
 This is not necessarily in any order.
 
+* Fix the project directory structure so it's not so flat! :) Right now all modules have all java files in the root package.
+* Add a few methods to Job like "run()" and "added()".
+  * Implement these in the sample application.
 * Persist jobs to disk through Serializable-ness.
   * Learn about Java Serialization. Is this the best approach? Do we maybe want to use a JSON parser? I kind of want to avoid any dependencies for this project if possible.
   * Look into native Android json serialization, as well as gson and other libraries.
