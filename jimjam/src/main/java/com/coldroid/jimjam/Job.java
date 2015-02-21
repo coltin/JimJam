@@ -10,4 +10,8 @@ public abstract class Job implements Serializable {
         mRequiresNetwork = parameters.requiresNetwork;
         mJobPriority = parameters.jobPriority;
     }
+
+    protected abstract void run() throws Throwable;
+
+    protected abstract void addedToQueue();
 }

@@ -5,13 +5,23 @@ import com.coldroid.jimjam.JobParameters;
 import com.coldroid.jimjam.JobPriority;
 
 /**
- * TODO: This Job will broadcast "High Priority Job complete" message. Use this to supersede lower priority jobs to test
- * priority.
+ * This Job will broadcast "High Priority Job complete" message when completed. Use this Job to supersede lower priority
+ * jobs to test priority if you've enqueued a bunch of long running low priority Jobs see {@link SleepForTwentyJob}.
  */
 public class HighPriorityJob extends Job {
     public HighPriorityJob() {
         super(new JobParameters()
                 .setRequiresNetwork(false)
                 .setJobPriority(JobPriority.HIGH));
+    }
+
+    @Override
+    protected void run() {
+        JobBroadcastReceiver.broadcastMessage("High Priority Job complete");
+    }
+
+    @Override
+    protected void addedToQueue() {
+        // Intentionally empty.
     }
 }
