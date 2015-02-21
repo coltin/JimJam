@@ -1,0 +1,30 @@
+package com.coldroid.jimjam.sample;
+
+import android.app.Application;
+
+import com.coldroid.jimjam.JobManager;
+
+public class SampleApplication extends Application {
+    private static SampleApplication INSTANCE;
+    private JobManager mJobManager;
+
+    public SampleApplication() {
+        INSTANCE = this;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        configureJobManager();
+    }
+
+    private void configureJobManager() {
+        mJobManager = new JobManager.Builder()
+                .customLogger(new JobLogger())
+                .build();
+    }
+
+    public JobManager getJobManager() {
+        return mJobManager;
+    }
+}
