@@ -1,5 +1,7 @@
 package com.coldroid.jimjam;
 
+import android.support.annotation.NonNull;
+
 /**
  * The following comment is probably LIES AND DECEIT. I'm writing what it WILL support as if it's already supported. SO
  * TRICKY!
@@ -19,6 +21,10 @@ public class JobManager {
      * To create the JobManager, use the {@link Builder}.
      */
     private JobManager() {
+    }
+
+    public void addJob(@NonNull Job job) {
+        // TODO: Should add a job to the JobQueue for processing.
     }
 
     public static class Builder {

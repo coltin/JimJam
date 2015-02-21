@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">JimJam</string>
     <string name="greeting">Hey there Jim Jammers!</string>
+    <string name="new_job_sleep_20_seconds">New Job: Sleep 20 seconds</string>
+    <string name="new_job_needs_network">New Job: Needs Network</string>
 </resources>

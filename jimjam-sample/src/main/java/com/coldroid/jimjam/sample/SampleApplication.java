@@ -18,13 +18,17 @@ public class SampleApplication extends Application {
         configureJobManager();
     }
 
-    private void configureJobManager() {
-        mJobManager = new JobManager.Builder()
-                .customLogger(new JobLogger())
-                .build();
+    public static SampleApplication instance() {
+        return INSTANCE;
     }
 
     public JobManager getJobManager() {
         return mJobManager;
+    }
+
+    private void configureJobManager() {
+        mJobManager = new JobManager.Builder()
+                .customLogger(new JobLogger())
+                .build();
     }
 }
