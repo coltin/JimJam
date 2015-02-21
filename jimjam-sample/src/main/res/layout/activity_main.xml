@@ -33,4 +33,13 @@
         android:textSize="22sp"
         android:text="@string/new_job_needs_network"/>
 
+    <Button
+        android:id="@+id/new_job_button_high_priority"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/button_space_top"
+        android:textSize="22sp"
+        android:text="@string/new_job_high_priority"/>
+
 </LinearLayout>

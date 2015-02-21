@@ -29,5 +29,12 @@ public class MainActivity extends Activity {
                 SampleApplication.instance().getJobManager().addJob(new NeedsNetworkJob());
             }
         });
+
+        findViewById(R.id.new_job_button_high_priority).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SampleApplication.instance().getJobManager().addJob(new HighPriorityJob());
+            }
+        });
     }
 }

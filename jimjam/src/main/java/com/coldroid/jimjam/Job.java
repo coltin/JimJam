@@ -1,4 +1,13 @@
 package com.coldroid.jimjam;
 
-public abstract class Job {
+import java.io.Serializable;
+
+public abstract class Job implements Serializable {
+    private final boolean mRequiresNetwork;
+    private final JobPriority mJobPriority;
+
+    public Job(JobParameters parameters) {
+        mRequiresNetwork = parameters.requiresNetwork;
+        mJobPriority = parameters.jobPriority;
+    }
 }
