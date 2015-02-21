@@ -1,0 +1,23 @@
+local.properties
+.idea
+*.iml
+*.classes
+*.log
+*.dex
+*.apk
+*.ap_
+.gradle
+
+bin
+gen
+build
+out
+lib
+obj
+
+.classpath
+.project
+.settings
+
+# Seriously MacOS why are you so noisy!?
+.DS_Store
