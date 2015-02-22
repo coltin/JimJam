@@ -14,6 +14,9 @@ import com.coldroid.jimjam.Job;
  * new Job, so don't get crazy!
  */
 public class MainActivity extends Activity {
+    private static final String TAG = "MainActivity";
+
+    private final JobBroadcastReceiver mJobBroadcastReceiver = new JobBroadcastReceiver(TAG);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +26,18 @@ public class MainActivity extends Activity {
         attachJobOnClickToView(R.id.new_job_button_sleep_for_twenty, new SleepForTwentyJob());
         attachJobOnClickToView(R.id.new_job_button_needs_network, new NeedsNetworkJob());
         attachJobOnClickToView(R.id.new_job_button_high_priority, new HighPriorityJob());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mJobBroadcastReceiver.registerReceiver();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mJobBroadcastReceiver.unregisterReceiver();
     }
 
     /**

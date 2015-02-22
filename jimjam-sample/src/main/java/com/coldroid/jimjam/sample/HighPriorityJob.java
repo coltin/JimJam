@@ -17,7 +17,7 @@ public class HighPriorityJob extends Job {
 
     @Override
     protected void run() {
-        JobBroadcastReceiver.broadcastMessage("High Priority Job complete");
+        JobBroadcastReceiver.broadcastJobMessage("High Priority Job complete");
     }
 
     @Override

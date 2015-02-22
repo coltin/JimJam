@@ -2,6 +2,9 @@ package com.coldroid.jimjam;
 
 import android.support.annotation.NonNull;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * The following comment is probably LIES AND DECEIT. I'm writing what it WILL support as if it's already supported. SO
  * TRICKY!
@@ -17,6 +20,7 @@ import android.support.annotation.NonNull;
  */
 public class JobManager {
     private JobManagerLogger mJobLogger;
+    private ExecutorService mThreadExecutor;
 
     /**
      * To create the JobManager, use the {@link Builder}.
@@ -27,8 +31,19 @@ public class JobManager {
     /**
      * Adds the Job to the JobQueue in a background thread.
      */
-    public void addJob(@NonNull Job job) {
+    public void addJob(final @NonNull Job job) {
         // TODO: Should add a job to the JobQueue for processing.
+        mThreadExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    job.run();
+                } catch (Throwable throwable) {
+                    // Intentionally empty.
+                }
+            }
+        });
+        mJobLogger.d("Job added to executor", null);
     }
 
     public static class Builder {
@@ -38,6 +53,10 @@ public class JobManager {
             if (mJobManager.mJobLogger == null) {
                 mJobManager.mJobLogger = new DefaultJobManagerLogger();
             }
+            /**
+             * Hard code a thread executor to 3? Boooo, so lame.
+             */
+            mJobManager.mThreadExecutor = Executors.newFixedThreadPool(3);
             return mJobManager;
         }
 

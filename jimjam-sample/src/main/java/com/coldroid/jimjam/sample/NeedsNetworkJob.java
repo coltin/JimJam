@@ -15,7 +15,7 @@ public class NeedsNetworkJob extends Job {
 
     @Override
     protected void run() {
-        JobBroadcastReceiver.broadcastMessage("Network Job complete");
+        JobBroadcastReceiver.broadcastJobMessage("Network Job complete");
     }
 
     @Override
