@@ -22,4 +22,10 @@ public class NeedsNetworkJob extends Job {
     protected void addedToQueue() {
         // Intentionally empty.
     }
+
+    public static class  Builder extends Job.Builder {
+        public Job build() {
+            return new SleepForTwentyJob();
+        }
+    }
 }

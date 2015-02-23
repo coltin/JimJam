@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 
 import com.coldroid.jimjam.Job;
+import com.coldroid.jimjam.Job.Builder;
 
 /**
  * This Activity will contain a number of buttons to create and test various kinds of Jobs. Every button tap creates a
@@ -23,9 +24,9 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        attachJobOnClickToView(R.id.new_job_button_sleep_for_twenty, new SleepForTwentyJob());
-        attachJobOnClickToView(R.id.new_job_button_needs_network, new NeedsNetworkJob());
-        attachJobOnClickToView(R.id.new_job_button_high_priority, new HighPriorityJob());
+        attachJobBuilderToOnClick(R.id.new_job_button_sleep_for_twenty, new SleepForTwentyJob.Builder());
+        attachJobBuilderToOnClick(R.id.new_job_button_needs_network, new NeedsNetworkJob.Builder());
+        attachJobBuilderToOnClick(R.id.new_job_button_high_priority, new HighPriorityJob.Builder());
     }
 
     @Override
@@ -41,14 +42,15 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * This is a convenience method that takes a viewId and attaches an {@link OnClickListener} which will add a {@link
-     * Job} to the JobManager. Meant to make the calling activity cleaner, I don't recommend this style in general.
+     * This is a convenience method that takes a viewId and attaches an {@link OnClickListener} which will use the
+     * Builder to generate a new {@link Job} which will be added to the JobManager. Meant to make the calling activity
+     * cleaner, I don't recommend this style in general, though it is pretty cool.
      */
-    private void attachJobOnClickToView(@IdRes int viewId, final @NonNull Job job) {
+    private void attachJobBuilderToOnClick(@IdRes int viewId, final @NonNull Builder jobBuilder) {
         findViewById(viewId).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                SampleApplication.instance().getJobManager().addJob(job);
+                SampleApplication.instance().getJobManager().addJob(jobBuilder.build());
             }
         });
     }
