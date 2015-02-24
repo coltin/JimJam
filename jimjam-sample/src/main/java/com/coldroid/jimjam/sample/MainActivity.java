@@ -20,13 +20,19 @@ public class MainActivity extends Activity {
     private final JobBroadcastReceiver mJobBroadcastReceiver = new JobBroadcastReceiver(TAG);
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle icicle) {
+        super.onCreate(icicle);
         setContentView(R.layout.activity_main);
 
         attachJobBuilderToOnClick(R.id.new_job_button_sleep_for_twenty, new SleepForTwentyJob.Builder());
         attachJobBuilderToOnClick(R.id.new_job_button_needs_network, new NeedsNetworkJob.Builder());
         attachJobBuilderToOnClick(R.id.new_job_button_high_priority, new HighPriorityJob.Builder());
+        findViewById(R.id.log_saved_jobs_to_logcat).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SampleApplication.instance().getJobManager().logDb();
+            }
+        });
     }
 
     @Override

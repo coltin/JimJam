@@ -49,6 +49,15 @@ public class JobManager {
         mJobLogger.d("Job added to executor", null);
     }
 
+    /**
+     * Prints some debugging information to logcat. Will not be in the release version.
+     */
+    public void logDb() {
+        mJobLogger.d("------Logging Jobs in DB Start------");
+        // TODO: Log whatever jobs are stored in the DB here, one per line.
+        mJobLogger.d("------Logging Jobs in DB Done-------");
+    }
+
     public static class Builder {
         private JobManager mJobManager = new JobManager();
 

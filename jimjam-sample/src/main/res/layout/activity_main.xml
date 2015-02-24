@@ -42,4 +42,13 @@
         android:textSize="22sp"
         android:text="@string/new_job_high_priority"/>
 
+    <Button
+        android:id="@+id/log_saved_jobs_to_logcat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/button_space_top"
+        android:textSize="22sp"
+        android:text="@string/log_saved_jobs_to_logcat"/>
+
 </LinearLayout>
