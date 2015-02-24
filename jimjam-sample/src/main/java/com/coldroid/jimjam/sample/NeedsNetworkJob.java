@@ -25,7 +25,7 @@ public class NeedsNetworkJob extends Job {
 
     public static class  Builder extends Job.Builder {
         public Job build() {
-            return new SleepForTwentyJob();
+            return new NeedsNetworkJob();
         }
     }
 }
