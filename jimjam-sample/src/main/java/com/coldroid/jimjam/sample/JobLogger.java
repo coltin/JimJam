@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.coldroid.jimjam.JobManagerLogger;
 
-public class JobLogger implements JobManagerLogger {
+public class JobLogger extends JobManagerLogger {
     private static final String TAG = "JobManager";
 
     @Override
