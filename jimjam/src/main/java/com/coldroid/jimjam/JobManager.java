@@ -1,7 +1,6 @@
 package com.coldroid.jimjam;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,7 +19,6 @@ import java.util.concurrent.Executors;
  * configure it to be persistent.
  */
 public class JobManager {
-    private static final String TAG = "JobManager";
     private JobManagerLogger mJobLogger;
     private ExecutorService mThreadExecutor;
 
@@ -34,7 +32,7 @@ public class JobManager {
      * Adds the Job to the JobQueue in a background thread.
      */
     public void addJob(final @NonNull Job job) {
-        Log.d(TAG, job.toString());
+        mJobLogger.d(job.toString());
         // TODO: Should add a job to the JobQueue for processing.
         mThreadExecutor.submit(new Runnable() {
             @Override
@@ -46,7 +44,7 @@ public class JobManager {
                 }
             }
         });
-        mJobLogger.d("Job added to executor", null);
+        mJobLogger.d("Job added to executor");
     }
 
     /**

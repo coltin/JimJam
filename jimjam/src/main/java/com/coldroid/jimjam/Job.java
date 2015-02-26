@@ -17,7 +17,7 @@ public abstract class Job implements Serializable {
 
     @Override
     public String toString() {
-        return "Job Fields\nmRequiresNetwork: " + mRequiresNetwork + "\nmJobPriority: " + mJobPriority.name();
+        return "Job Name: " + getClass().getSimpleName() + " Job Fields\nmRequiresNetwork: " + mRequiresNetwork + "\nmJobPriority: " + mJobPriority.name();
     }
 
     /**
