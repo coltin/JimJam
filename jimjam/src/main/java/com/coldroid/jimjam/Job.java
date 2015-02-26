@@ -5,10 +5,12 @@ import java.io.Serializable;
 public abstract class Job implements Serializable {
     private final boolean mRequiresNetwork;
     private final JobPriority mJobPriority;
+    private final boolean mIsPersistent;
 
     public Job(JobParameters parameters) {
         mRequiresNetwork = parameters.requiresNetwork;
         mJobPriority = parameters.jobPriority;
+        mIsPersistent = parameters.isPersistent;
     }
 
     protected abstract void run() throws Throwable;
@@ -18,6 +20,10 @@ public abstract class Job implements Serializable {
     @Override
     public String toString() {
         return "Job Name: " + getClass().getSimpleName() + " Job Fields\nmRequiresNetwork: " + mRequiresNetwork + "\nmJobPriority: " + mJobPriority.name();
+
+    public boolean isPersistent() {
+        return mIsPersistent;
+    }
     }
 
     /**

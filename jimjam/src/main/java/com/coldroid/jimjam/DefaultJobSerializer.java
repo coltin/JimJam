@@ -18,7 +18,7 @@ public final class DefaultJobSerializer implements JobSerializer {
 
     private final JobManagerLogger mJobLogger;
 
-    public DefaultJobSerializer(JobManagerLogger jobLogger) {
+    public DefaultJobSerializer(@NonNull JobManagerLogger jobLogger) {
         mJobLogger = jobLogger;
     }
 

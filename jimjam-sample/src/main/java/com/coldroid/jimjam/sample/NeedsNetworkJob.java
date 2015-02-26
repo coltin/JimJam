@@ -10,7 +10,8 @@ import com.coldroid.jimjam.JobParameters;
 public class NeedsNetworkJob extends Job {
     public NeedsNetworkJob() {
         super(new JobParameters()
-                .setRequiresNetwork(true));
+                .setRequiresNetwork(true)
+                .setIsPersistent());
     }
 
     @Override
@@ -23,7 +24,7 @@ public class NeedsNetworkJob extends Job {
         // Intentionally empty.
     }
 
-    public static class  Builder extends Job.Builder {
+    public static class Builder extends Job.Builder {
         public Job build() {
             return new NeedsNetworkJob();
         }
