@@ -1,13 +1,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:paddingLeft="@dimen/activity_horizontal_margin"
-              android:paddingRight="@dimen/activity_horizontal_margin"
-              android:paddingTop="@dimen/activity_vertical_margin"
-              android:paddingBottom="@dimen/activity_vertical_margin"
-              tools:context=".MainActivity"
-              android:orientation="vertical">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context=".MainActivity"
+    android:orientation="vertical">
 
     <TextView
         android:text="@string/greeting"
@@ -16,39 +16,28 @@
         android:layout_height="wrap_content"/>
 
     <Button
+        style="@style/button"
         android:id="@+id/new_job_button_sleep_for_twenty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/button_space_top"
-        android:textSize="22sp"
         android:text="@string/new_job_sleep_20_seconds"/>
 
     <Button
+        style="@style/button"
         android:id="@+id/new_job_button_needs_network"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/button_space_top"
-        android:textSize="22sp"
         android:text="@string/new_job_needs_network"/>
 
     <Button
+        style="@style/button"
         android:id="@+id/new_job_button_high_priority"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/button_space_top"
-        android:textSize="22sp"
         android:text="@string/new_job_high_priority"/>
 
     <Button
+        style="@style/button"
         android:id="@+id/log_saved_jobs_to_logcat"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/button_space_top"
-        android:textSize="22sp"
         android:text="@string/log_saved_jobs_to_logcat"/>
+
+    <Button
+        style="@style/button"
+        android:id="@+id/dump_job_database"
+        android:text="@string/dump_job_database"/>
 
 </LinearLayout>

@@ -5,4 +5,5 @@
     <string name="new_job_needs_network">New Job: Needs Network</string>
     <string name="new_job_high_priority">New Job: High Priority</string>
     <string name="log_saved_jobs_to_logcat">Log Saved Jobs to Logcat</string>
+    <string name="dump_job_database">Dump Job Database</string>
 </resources>

@@ -33,6 +33,12 @@ public class MainActivity extends Activity {
                 SampleApplication.instance().getJobManager().logDb();
             }
         });
+        findViewById(R.id.dump_job_database).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SampleApplication.instance().getJobManager().dumpDatabase();
+            }
+        });
     }
 
     @Override

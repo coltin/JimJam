@@ -1,6 +1,8 @@
 package com.coldroid.jimjam;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,8 +22,8 @@ import java.util.concurrent.Executors;
  */
 public class JobManager {
     private JobManagerLogger mJobLogger;
-    private JobSerializer mJobSerializer;
     private ExecutorService mThreadExecutor;
+    private JobDatabase mJobDatabase;
 
     /**
      * To create the JobManager, use the {@link Builder}.
@@ -33,7 +35,11 @@ public class JobManager {
      * Adds the Job to the JobQueue in a background thread.
      */
     public void addJob(final @NonNull Job job) {
+        if (job.isPersistent()) {
+            mJobDatabase.persistJob(job);
+        }
         mJobLogger.d(job.toString());
+
         // TODO: Should add a job to the JobQueue for processing.
         mThreadExecutor.submit(new Runnable() {
             @Override
@@ -53,20 +59,37 @@ public class JobManager {
      */
     public void logDb() {
         mJobLogger.d("------Logging Jobs in DB Start------");
-        // TODO: Log whatever jobs are stored in the DB here, one per line.
+        int i = 1;
+        for (Job job : mJobDatabase.fetchJobs()) {
+            mJobLogger.d("Job #" + i++ + ": " + job.toString());
+        }
         mJobLogger.d("------Logging Jobs in DB Done-------");
     }
 
+    /**
+     * Can cause some serious havoc and will likely not be available in the release. Use with caution!
+     */
+    public void dumpDatabase() {
+        mJobDatabase.dumpDatabase();
+    }
+
     public static class Builder {
-        private JobManager mJobManager = new JobManager();
+        private final JobManager mJobManager = new JobManager();
+        private final Context mContext;
+        private JobSerializer mJobSerializer;
+
+        public Builder(@NonNull Context context) {
+            mContext = context.getApplicationContext();
+        }
 
         public JobManager build() {
             if (mJobManager.mJobLogger == null) {
                 mJobManager.mJobLogger = new DefaultJobManagerLogger();
             }
-            if (mJobManager.mJobSerializer == null) {
-                mJobManager.mJobSerializer = new DefaultJobSerializer(mJobManager.mJobLogger);
+            if (mJobSerializer == null) {
+                mJobSerializer = new DefaultJobSerializer(mJobManager.mJobLogger);
             }
+            mJobManager.mJobDatabase = new JobDatabase(mContext, mJobSerializer);
             /**
              * Hard code a thread executor to 3? Boooo, so lame.
              */
@@ -74,13 +97,13 @@ public class JobManager {
             return mJobManager;
         }
 
-        public Builder customLogger(JobManagerLogger jobLogger) {
+        public Builder customLogger(@Nullable JobManagerLogger jobLogger) {
             mJobManager.mJobLogger = jobLogger;
             return this;
         }
 
-        public Builder customSerializer(JobSerializer jobSerializer) {
-            mJobManager.mJobSerializer = jobSerializer;
+        public Builder customSerializer(@Nullable JobSerializer jobSerializer) {
+            mJobSerializer = jobSerializer;
             return this;
         }
     }
