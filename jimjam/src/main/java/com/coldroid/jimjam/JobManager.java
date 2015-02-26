@@ -6,8 +6,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * The following comment is probably LIES AND DECEIT. I'm writing what it WILL support as if it's already supported. SO
- * TRICKY!
+ * The following comment is <s>probably</s> definitely LIES AND DECEIT. I'm writing what it WILL support as if it's
+ * already supported . SO TRICKY!
  *
  * The JobManager can be used to manage various kinds of {@link Job}'s that you will create. These Jobs are discrete
  * units of work that may take a lot of time to process, or things you want to have some guarantee will happen. If the
@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
  */
 public class JobManager {
     private JobManagerLogger mJobLogger;
+    private JobSerializer mJobSerializer;
     private ExecutorService mThreadExecutor;
 
     /**
@@ -63,6 +64,9 @@ public class JobManager {
             if (mJobManager.mJobLogger == null) {
                 mJobManager.mJobLogger = new DefaultJobManagerLogger();
             }
+            if (mJobManager.mJobSerializer == null) {
+                mJobManager.mJobSerializer = new DefaultJobSerializer(mJobManager.mJobLogger);
+            }
             /**
              * Hard code a thread executor to 3? Boooo, so lame.
              */
@@ -72,6 +76,11 @@ public class JobManager {
 
         public Builder customLogger(JobManagerLogger jobLogger) {
             mJobManager.mJobLogger = jobLogger;
+            return this;
+        }
+
+        public Builder customSerializer(JobSerializer jobSerializer) {
+            mJobManager.mJobSerializer = jobSerializer;
             return this;
         }
     }
