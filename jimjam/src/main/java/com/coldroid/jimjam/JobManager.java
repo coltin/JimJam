@@ -168,9 +168,7 @@ public class JobManager {
          * Called when the job has successfully run to completion.
          */
         private void jobSuccess() {
-            if (mJob.isPersistent()) {
-                mJobDatabase.removeJob(mJob);
-            }
+            mJobDatabase.removeJob(mJob);
         }
 
         /**
