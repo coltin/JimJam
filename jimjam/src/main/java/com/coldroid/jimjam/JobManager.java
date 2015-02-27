@@ -25,6 +25,7 @@ import static com.coldroid.jimjam.NetworkBroadcastReceiver.NetworkStateListener;
 public class JobManager {
     private JobManagerLogger mJobLogger;
     private ExecutorService mThreadExecutor;
+    private NetworkUtils mNetworkUtils;
     private JobDatabase mJobDatabase;
 
     /**
@@ -78,6 +79,10 @@ public class JobManager {
         mJobDatabase.dumpDatabase();
     }
 
+    /**
+     * This will be called when the JobManager is built. It will fetch jobs from disk and add them to the
+     * mPriorityJobExecutor.
+     */
     private void start() {
         for (Job job : mJobDatabase.fetchJobs()) {
             addJob(job);
@@ -108,6 +113,7 @@ public class JobManager {
             if (mJobSerializer == null) {
                 mJobSerializer = new DefaultJobSerializer(mJobManager.mJobLogger);
             }
+            mJobManager.mNetworkUtils = new NetworkUtils(mContext);
             mJobManager.mJobDatabase = new JobDatabase(mContext, mJobSerializer);
             /**
              * Hard code a thread executor to 3? Boooo, so lame.
