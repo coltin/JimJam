@@ -28,7 +28,7 @@ public class SampleApplication extends Application {
 
     private void configureJobManager() {
         mJobManager = new JobManager.Builder(this)
-                .customLogger(new JobLogger())
+                .customLogger(new SampleJobLogger())
                 .build();
     }
 }

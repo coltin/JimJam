@@ -3,7 +3,9 @@ package com.coldroid.jimjam.sample;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-public class JobLogger extends com.coldroid.jimjam.JobLogger {
+import com.coldroid.jimjam.JobLogger;
+
+public class SampleJobLogger extends JobLogger {
     private static final String TAG = "JobManager";
 
     @Override
