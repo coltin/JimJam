@@ -22,15 +22,8 @@ import android.widget.Toast;
  * An Android bus system would also be super awesome here, but this sample application will be native Android only.
  */
 public class JobBroadcastReceiver extends BroadcastReceiver {
-    private static final String TAG = "JobBroadcastReceiver";
     private static final String ACTION_JOB_MESSAGE = "com.coldroid.jimjam.sample.jobmessage";
     private static final String EXTRA_JOB_MESSAGE = "job_message";
-
-    private final String mLogTag;
-
-    public JobBroadcastReceiver(String logTag) {
-        mLogTag = logTag;
-    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -41,7 +34,6 @@ public class JobBroadcastReceiver extends BroadcastReceiver {
      * Convenience method to send a broadcast that will be picked up and processed by any registered receivers.
      */
     public static void broadcastJobMessage(@NonNull String message) {
-        Log.d(TAG, "broadcastJobMessage: " + message);
         Intent intent = new Intent(ACTION_JOB_MESSAGE).putExtra(EXTRA_JOB_MESSAGE, message);
         LocalBroadcastManager.getInstance(SampleApplication.instance()).sendBroadcast(intent);
     }

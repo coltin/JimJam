@@ -15,6 +15,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
+    <ToggleButton
+        style="@style/button"
+        android:id="@+id/wifi_toggler"
+        android:textOff="Wifi OFF"
+        android:textOn="Wifi ON"/>
+
     <Button
         style="@style/button"
         android:id="@+id/new_job_button_sleep_for_twenty"
