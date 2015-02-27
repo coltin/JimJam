@@ -7,20 +7,22 @@ import java.util.Locale;
 
 /**
  * Using the {@link JobManager} requires creating subclasses of Job to be added to the JobManager. You can configure
- * your job by passing the constructor a {@link JobParameters} to the constructor. Fields that are not-serializable
- * will not be persisted to disk. Mark fields that do not need to be persisted as "transient".
+ * your job by passing the constructor a {@link JobParameters} to the constructor. Fields that are not-serializable will
+ * not be persisted to disk. Mark fields that do not need to be persisted as "transient".
  */
 public abstract class Job implements Serializable, Comparable<Job> {
     private static long serialVersionUID = 1L;
-    private final boolean mRequiresNetwork;
     private final JobPriority mJobPriority;
+    private final boolean mRequiresNetwork;
     private final boolean mIsPersistent;
+    private int mRunAttempts;
     private transient long mRowId;
 
     public Job(@NonNull JobParameters parameters) {
         mRequiresNetwork = parameters.requiresNetwork;
         mJobPriority = parameters.jobPriority;
         mIsPersistent = parameters.isPersistent;
+        mRunAttempts = 0;
         // -1 indicates that the Job is not yet stored in a database table.
         mRowId = -1;
     }
@@ -32,6 +34,11 @@ public abstract class Job implements Serializable, Comparable<Job> {
      * one.
      */
     protected abstract void run() throws Exception;
+
+    /**
+     * This will be called when a job fails (throws an exception). That exception a
+     */
+    protected abstract boolean shouldRetry(int mRunAttempts, Exception exception);
 
     /**
      * This is called when a job is about to be submitted to the Job Queue. Persisted jobs have been written to disk at
@@ -54,7 +61,19 @@ public abstract class Job implements Serializable, Comparable<Job> {
         return mJobPriority.compareTo(otherJob.mJobPriority);
     }
 
-    public boolean isPersistent() {
+    public final void incrementRuns() {
+        mRunAttempts++;
+    }
+
+    /**
+     * Called when a job run fails and shouldRetry() returned false. This is a hook that jobs can optionally override to
+     * know when their job will not be retried anymore.
+     */
+    public void failedToComplete() {
+        // Intentionally empty.
+    }
+
+    public final boolean isPersistent() {
         return mIsPersistent;
     }
 
@@ -70,8 +89,20 @@ public abstract class Job implements Serializable, Comparable<Job> {
      * Returns the rowId of the Job used to updated/delete the Job from the database table. A rowId of -1 indicates the
      * job is not currently in a database table.
      */
-    public long getRowId() {
+    public final long getRowId() {
         return mRowId;
+    }
+
+    public boolean requiresNetwork() {
+        return mRequiresNetwork;
+    }
+
+    /**
+     * This is called by the JobManager. Jobs should @Override {@link Job#shouldRetry(int, Exception)} to handle whether
+     * their jobs should retry after failure. There is no other reason to call this methods.
+     */
+    public final boolean shouldRetry(Exception exception) {
+        return shouldRetry(mRunAttempts, exception);
     }
 
     /**

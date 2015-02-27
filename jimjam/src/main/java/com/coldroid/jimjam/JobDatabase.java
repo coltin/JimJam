@@ -78,6 +78,14 @@ public class JobDatabase extends SQLiteOpenHelper {
         database.close();
     }
 
+    /**
+     * TODO: This will be called when the job is running and is marked as persistent to update the attempts. Might not
+     * be a great idea. We shall seeee.
+     */
+    public void updateJob(Job mJob) {
+
+    }
+
     public @NonNull List<Job> fetchJobs() {
         SQLiteDatabase database = getReadableDatabase();
         Cursor cursor = database.rawQuery(SQL_QUERY_FETCH_JOBS, null);

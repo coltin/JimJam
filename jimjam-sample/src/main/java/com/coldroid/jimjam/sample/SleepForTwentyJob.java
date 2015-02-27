@@ -26,6 +26,11 @@ public class SleepForTwentyJob extends Job {
     }
 
     @Override
+    protected boolean shouldRetry(int mRunAttempts, Exception exception) {
+        return mRunAttempts <= 15;
+    }
+
+    @Override
     protected void addedToQueue() {
         // Intentionally empty.
     }
