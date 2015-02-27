@@ -11,6 +11,7 @@ Current Status
 * There is now a button to print logs (to logcat) of all the saved jobs. If you reboot your device, they will still show up! Jobs are not removed when they complete (yet). The "High Priority" job is  not persisted.
 * Jobs are now creatable with a JobParameters object which configures the job. Here you provide whether the job is persistent, requires the network, and the jobs "priority".
 * Job priority is specified as an enum. This will likely change to give more flexibility, and you can create your own enum of Job Priority if you want. I'm just experimenting with it for now.
+* Unfinished persisted jobs will be restarted when the JobManager is created.
 
 Todo
 ----
@@ -19,11 +20,10 @@ This is not necessarily in any order.
 
 * Fix the project directory structure so it's not so flat! :) Right now all modules have all java files in the root package.
 * Implement the "requires network" in the JobManager.
-* Remove jobs from the Sqlite database when they complete (or run out of retries).
+* Implement the idea of "job retries", and remove a job when it runs out of retries.
 * Do proper queueing/scheduling.
  * Take priority into consideration.
  * Use the "requires network" knowledge for jobs that require them.
-* When the Job Manager is initialized, fetch jobs from the DB and load them into the queue.
 * Ensure DB actions are done in the background.
 * Add job lifecycle methods so that application developers can hook into them as desired.
   
