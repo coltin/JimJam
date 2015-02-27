@@ -10,7 +10,7 @@ import java.util.Locale;
  * your job by passing the constructor a {@link JobParameters} to the constructor. Fields that are not-serializable
  * will not be persisted to disk. Mark fields that do not need to be persisted as "transient".
  */
-public abstract class Job implements Serializable {
+public abstract class Job implements Serializable, Comparable<Job> {
     private static long serialVersionUID = 1L;
     private final boolean mRequiresNetwork;
     private final JobPriority mJobPriority;
@@ -34,6 +34,14 @@ public abstract class Job implements Serializable {
         return String.format(Locale.US,
                 "Job Name: %s Job Fields\nmRequiresNetwork: %s\nmJobPriority: " + "%s\nisPersistent: %b\nDbRowId: %d",
                 getClass().getSimpleName(), mRequiresNetwork, mJobPriority, mIsPersistent, mRowId);
+    }
+
+    @Override
+    public int compareTo(Job otherJob) {
+        if (otherJob == null) {
+            return 1;
+        }
+        return mJobPriority.compareTo(otherJob.mJobPriority);
     }
 
     public boolean isPersistent() {
