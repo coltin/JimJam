@@ -14,12 +14,12 @@ public class JobLogger extends JobManagerLogger {
     }
 
     @Override
-    public void d(String message, @Nullable Throwable throwable) {
-        Log.d(TAG, message, throwable);
+    public void d(String message, @Nullable Exception exception) {
+        Log.d(TAG, message, exception);
     }
 
     @Override
-    public void e(String message, @Nullable Throwable throwable) {
-        Log.e(TAG, message, throwable);
+    public void e(String message, @Nullable Exception exception) {
+        Log.e(TAG, message, exception);
     }
 }

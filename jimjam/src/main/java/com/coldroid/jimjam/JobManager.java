@@ -62,7 +62,7 @@ public class JobManager {
     /**
      * Prints some debugging information to logcat. Will not be in the release version.
      */
-    public void logDb() {
+    public void logDatabaseJobs() {
         mJobLogger.d("------Logging Jobs in DB Start------");
         int i = 1;
         for (Job job : mJobDatabase.fetchJobs()) {

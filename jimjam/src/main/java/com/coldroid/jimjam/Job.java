@@ -25,8 +25,18 @@ public abstract class Job implements Serializable, Comparable<Job> {
         mRowId = -1;
     }
 
-    protected abstract void run() throws Throwable;
+    /**
+     * The work of your Job is done here. run() will be called on its own thread. If run() finishes without exception it
+     * is considered successful. A Job fails if run() throws an Exception. When a Job fails shouldRetry() will be called
+     * with the attempt number and the exception that was thrown. The first failure will have mRunAttempts equal to
+     * one.
+     */
+    protected abstract void run() throws Exception;
 
+    /**
+     * This is called when a job is about to be submitted to the Job Queue. Persisted jobs have been written to disk at
+     * this point.
+     */
     protected abstract void addedToQueue();
 
     @Override
@@ -52,7 +62,7 @@ public abstract class Job implements Serializable, Comparable<Job> {
      * Should only be called when inserted into a database table, and is used to update/delete the Job from that
      * database table.
      */
-    public void setRowIdId(long rowId) {
+    public final void setRowIdId(long rowId) {
         mRowId = rowId;
     }
 

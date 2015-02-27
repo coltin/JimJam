@@ -14,12 +14,12 @@ public class DefaultJobManagerLogger extends JobManagerLogger {
     }
 
     @Override
-    public void d(String message, @Nullable Throwable throwable) {
+    public void d(String message, @Nullable Exception exception) {
         // Intentionally empty.
     }
 
     @Override
-    public void e(String message, @Nullable Throwable throwable) {
+    public void e(String message, @Nullable Exception exception) {
         // Intentionally empty.
     }
 }

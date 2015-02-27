@@ -20,7 +20,7 @@ public class SleepForTwentyJob extends Job {
     }
 
     @Override
-    protected void run() throws Throwable {
+    protected void run() throws Exception {
         Thread.sleep(20 * 1000);
         JobBroadcastReceiver.broadcastJobMessage("sleepy time job done!");
     }

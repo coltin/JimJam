@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.log_saved_jobs_to_logcat).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                SampleApplication.instance().getJobManager().logDb();
+                SampleApplication.instance().getJobManager().logDatabaseJobs();
             }
         });
         findViewById(R.id.dump_job_database).setOnClickListener(new OnClickListener() {
