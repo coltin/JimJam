@@ -7,6 +7,8 @@ import android.support.annotation.Nullable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.coldroid.jimjam.NetworkBroadcastReceiver.NetworkStateListener;
+
 /**
  * The following comment is <s>probably</s> definitely LIES AND DECEIT. I'm writing what it WILL support as if it's
  * already supported . SO TRICKY!
@@ -80,7 +82,15 @@ public class JobManager {
         for (Job job : mJobDatabase.fetchJobs()) {
             addJob(job);
         }
+        NetworkBroadcastReceiver.registerListener(mNetworkStateListener);
     }
+
+    private NetworkStateListener mNetworkStateListener = new NetworkStateListener() {
+        @Override
+        public void networkConnected() {
+            mJobLogger.d("Received 'network connected' event");
+        }
+    };
 
     public static class Builder {
         private final JobManager mJobManager = new JobManager();

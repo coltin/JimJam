@@ -12,6 +12,7 @@ Current Status
 * Jobs are now creatable with a JobParameters object which configures the job. Here you provide whether the job is persistent, requires the network, and the jobs "priority".
 * Job priority is specified as an enum. This will likely change to give more flexibility, and you can create your own enum of Job Priority if you want. I'm just experimenting with it for now.
 * Unfinished persisted jobs will be restarted when the JobManager is created.
+* JobManager receives "network connected" events. The JobManager only logs these events, it does not use them for scheduling purposes yet.
 
 Todo
 ----
@@ -19,7 +20,7 @@ Todo
 This is not necessarily in any order.
 
 * Fix the project directory structure so it's not so flat! :) Right now all modules have all java files in the root package.
-* Implement the "requires network" in the JobManager.
+* Use "network connected" events, and delay network jobs until there is network if there is no network when it's added.
 * Implement the idea of "job retries", and remove a job when it runs out of retries.
 * Do proper queueing/scheduling.
  * Take priority into consideration.
