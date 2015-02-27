@@ -35,7 +35,7 @@ public class JobManager {
      * Adds the Job to the JobQueue in a background thread.
      */
     public void addJob(final @NonNull Job job) {
-        if (job.isPersistent()) {
+        if (job.isPersistent() && job.getRowId() == -1) {
             mJobDatabase.persistJob(job);
         }
         mJobLogger.d(job.toString());
@@ -76,6 +76,12 @@ public class JobManager {
         mJobDatabase.dumpDatabase();
     }
 
+    private void start() {
+        for (Job job : mJobDatabase.fetchJobs()) {
+            addJob(job);
+        }
+    }
+
     public static class Builder {
         private final JobManager mJobManager = new JobManager();
         private final Context mContext;
@@ -97,6 +103,7 @@ public class JobManager {
              * Hard code a thread executor to 3? Boooo, so lame.
              */
             mJobManager.mThreadExecutor = Executors.newFixedThreadPool(3);
+            mJobManager.start();
             return mJobManager;
         }
 
