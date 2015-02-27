@@ -46,6 +46,9 @@ public class JobManager {
             public void run() {
                 try {
                     job.run();
+                    if (job.isPersistent()) {
+                        mJobDatabase.removeJob(job);
+                    }
                 } catch (Throwable throwable) {
                     // Intentionally empty.
                 }

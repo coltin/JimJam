@@ -11,6 +11,7 @@ import java.util.Locale;
  * will not be persisted to disk. Mark fields that do not need to be persisted as "transient".
  */
 public abstract class Job implements Serializable {
+    private static long serialVersionUID = 1L;
     private final boolean mRequiresNetwork;
     private final JobPriority mJobPriority;
     private final boolean mIsPersistent;
@@ -51,7 +52,7 @@ public abstract class Job implements Serializable {
      * Returns the rowId of the Job used to updated/delete the Job from the database table. A rowId of -1 indicates the
      * job is not currently in a database table.
      */
-    public long getRowId(long rowId) {
+    public long getRowId() {
         return mRowId;
     }
 

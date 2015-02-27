@@ -29,6 +29,7 @@ public class JobDatabase extends SQLiteOpenHelper {
     private static final String COLUMN_SERIALIZED_JOB = "serialized_job";
     private static final String SQL_QUERY_FETCH_JOBS =
             "SELECT " + COLUMN_ID + "," + COLUMN_SERIALIZED_JOB + " FROM " + TABLE_JOBS;
+    private static final String ROW_DELETE_WHERE = COLUMN_ID + "=?";
 
     private final JobSerializer mJobSerializer;
 
@@ -61,6 +62,20 @@ public class JobDatabase extends SQLiteOpenHelper {
         long rowId = database.insert(TABLE_JOBS, null, contentValues);
         database.close();
         job.setRowIdId(rowId);
+    }
+
+    /**
+     * This will attempt to remove the supplied job from the database. If the job is not found or doesn't have an
+     * associated rowId, it will silently return.
+     */
+    public void removeJob(@NonNull Job job) {
+        long rowId = job.getRowId();
+        if (rowId == -1) {
+            return;
+        }
+        SQLiteDatabase database = getWritableDatabase();
+        database.delete(TABLE_JOBS, ROW_DELETE_WHERE, new String[]{Long.toString(rowId)});
+        database.close();
     }
 
     public @NonNull List<Job> fetchJobs() {
