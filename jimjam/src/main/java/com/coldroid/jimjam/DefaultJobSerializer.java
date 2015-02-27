@@ -16,9 +16,9 @@ import java.io.ObjectOutputStream;
  */
 public final class DefaultJobSerializer implements JobSerializer {
 
-    private final JobManagerLogger mJobLogger;
+    private final JobLogger mJobLogger;
 
-    public DefaultJobSerializer(@NonNull JobManagerLogger jobLogger) {
+    public DefaultJobSerializer(@NonNull JobLogger jobLogger) {
         mJobLogger = jobLogger;
     }
 

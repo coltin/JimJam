@@ -27,7 +27,7 @@ import static com.coldroid.jimjam.NetworkBroadcastReceiver.NetworkStateListener;
  * configure it to be persistent.
  */
 public class JobManager {
-    private JobManagerLogger mJobLogger;
+    private JobLogger mJobLogger;
     private NetworkUtils mNetworkUtils;
     private ExecutorService mPriorityJobExecutor;
     private JobDatabase mJobDatabase;
@@ -201,7 +201,7 @@ public class JobManager {
 
         public JobManager build() {
             if (mJobManager.mJobLogger == null) {
-                mJobManager.mJobLogger = new DefaultJobManagerLogger();
+                mJobManager.mJobLogger = new DefaultJobLogger();
             }
             if (mJobSerializer == null) {
                 mJobSerializer = new DefaultJobSerializer(mJobManager.mJobLogger);
@@ -214,7 +214,7 @@ public class JobManager {
             return mJobManager;
         }
 
-        public Builder customLogger(@Nullable JobManagerLogger jobLogger) {
+        public Builder customLogger(@Nullable JobLogger jobLogger) {
             mJobManager.mJobLogger = jobLogger;
             return this;
         }
