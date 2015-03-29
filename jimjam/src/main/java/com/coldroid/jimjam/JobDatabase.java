@@ -14,7 +14,8 @@ import java.util.List;
 /**
  * This is a convenience class which will handle database transactions for storing/retrieving persistent jobs. Currently
  * stores the serialized Jobs in the DB as a blob. May potentially store these byte[] blobs on the filesystem and store
- * the path to the Job blob. Not a priority at this time unless SQLite has trouble storing Job blobs.
+ * the path to the Job blob. Not a priority at this time unless SQLite has trouble storing Job blobs. That's just really
+ * fun to say! Job Blob. Job Blob.
  *
  * Things like "job priority" are stored with the Job object, and not as fields in the DB. This keeps things simple.
  *
@@ -104,7 +105,7 @@ public class JobDatabase extends SQLiteOpenHelper {
     }
 
     /**
-     * Will not be available in final version.
+     * Will not be available in final version. Deletes/removes all jobs.
      */
     public void dumpDatabase() {
         SQLiteDatabase database = getWritableDatabase();
