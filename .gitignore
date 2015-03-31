@@ -18,6 +18,7 @@ obj
 .classpath
 .project
 .settings
+captures/
 
 # Seriously MacOS why are you so noisy!?
 .DS_Store

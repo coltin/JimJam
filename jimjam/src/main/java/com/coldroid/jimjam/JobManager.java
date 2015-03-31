@@ -26,7 +26,7 @@ import static com.coldroid.jimjam.NetworkBroadcastReceiver.NetworkStateListener;
  * Private member fields in your {@link Job} that are Serializable will auto-magically be written to disk if you
  * configure it to be persistent.
  */
-public class JobManager {
+public class JobManager extends JobManagerBackground {
     private JobLogger mJobLogger;
     private NetworkUtils mNetworkUtils;
     private ExecutorService mPriorityJobExecutor;
@@ -41,15 +41,34 @@ public class JobManager {
     }
 
     /**
-     * Adds the Job to the mPriorityJobExecutor. Will store the Job to disk if it's set to be persistent.
+     * Adds the Job to the mPriorityJobExecutor. Will store the Job to disk first if it's set to be persistent.
+     *
+     * Should be called only from a background thread. See {@link JobManagerBackground#addJob(Job)}.
      */
-    public void addJob(final @NonNull Job job) {
+    @Override
+    protected void addJobBackground(@NonNull Job job) {
         if (job.isPersistent() && job.getRowId() == -1) {
             mJobDatabase.persistJob(job);
         }
         job.addedToQueue();
         mPriorityJobExecutor.execute(new RunnableJob(job));
         mJobLogger.d("Job queued in priority executor");
+    }
+
+    /**
+     * This will be called when the JobManager is built. It will fetch jobs from disk and add them to the
+     * mPriorityJobExecutor.
+     *
+     * Should be called only from a background thread. See {@link JobManagerBackground#start()}.
+     */
+    @Override
+    protected void startBackground() {
+        // TODO: The mNetworkStateListener.networkConnected() should be posted to the background thread. So we listen
+        // for the events right away, register the Jobs, and then receive the events.
+        NetworkBroadcastReceiver.registerListener(mNetworkStateListener);
+        for (Job job : mJobDatabase.fetchJobs()) {
+            addJobBackground(job);
+        }
     }
 
     /**
@@ -69,17 +88,6 @@ public class JobManager {
      */
     public void dumpDatabase() {
         mJobDatabase.dumpDatabase();
-    }
-
-    /**
-     * This will be called when the JobManager is built. It will fetch jobs from disk and add them to the
-     * mPriorityJobExecutor.
-     */
-    private void start() {
-        for (Job job : mJobDatabase.fetchJobs()) {
-            addJob(job);
-        }
-        NetworkBroadcastReceiver.registerListener(mNetworkStateListener);
     }
 
     private NetworkStateListener mNetworkStateListener = new NetworkStateListener() {
@@ -149,8 +157,8 @@ public class JobManager {
          * the network is no longer connected it will add itself to the queue. Woo2! This is not an issue because we
          * don't want to run when the network is disconnected.
          *
-         * In 99.9% of cases this synchronized block is unnecessary, but it will keep jbos from being stuck in an
-         * unprocessed state.
+         * In 99.9% of cases this synchronized block is unnecessary, but it will keep jobs from being stuck in an
+         * unprocessed state, which would be nasty to diagnose so we err on the side of caution.
          *
          * @return boolean whether the job was rescheduled.
          */
@@ -198,6 +206,8 @@ public class JobManager {
         }
 
         public JobManager build() {
+            mJobManager.mJobManagerThread = new JobManagerThread("job_manager_thread");
+            mJobManager.mJobManagerThread.start();
             if (mJobManager.mJobLogger == null) {
                 mJobManager.mJobLogger = new DefaultJobLogger();
             }
@@ -208,6 +218,8 @@ public class JobManager {
             mJobManager.mWaitingForNetwork = new LinkedList<>();
             mJobManager.mJobDatabase = new JobDatabase(mContext, mJobSerializer);
             mJobManager.mPriorityJobExecutor = newThreadExecutorService();
+            // Block until the looper is setup.
+            mJobManager.mJobManagerThread.getLooper();
             mJobManager.start();
             return mJobManager;
         }
