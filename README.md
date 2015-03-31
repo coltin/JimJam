@@ -20,14 +20,17 @@ Todo
 
 This is not necessarily in any order.
 
-* Fix the project directory structure so it's not so flat! :) Right now all modules have all java files in the root package.
+* Fix the project directory structure so it's not so flat! :)
 * Create a section of this READEME that is dedicated to the sample application. How it works, how it can be used, etc.
-* Ensure DB actions are done in the background.
-* Add job lifecycle methods so that application developers can hook into them as desired. [This might be done, need to re-evaluate]
-* Allow Files (supplied as file paths) to be associated with a Job. When the job is removed, so are the files associated with that job.
- * The idea here is that you can create jobs which process temporary files, and you can just pass up responsibility for cleaning them.
+* Make calls to JobManager async (mostly done with JobManagerThread).
+* Fix issue with the ExecutorService only spinning up one thread in its pool, even with plenty of jobs.
+* Add job lifecycle methods so that application developers can hook into them as desired. (partially done)
 * Allow a job to cancel? Seems like this is unnecessary given a job can throw an exception to cancel itself. Having something outside the job cancel might be useful.
-* The state of jobs is not currently stored after it's added. So if a job modifies its state and expects this to be the case between retries, there is no mechanism to do this (inside the Job manager). Therefore it might make sense to allow jobs to specify a data model which gets stored to disk whenever the Job calls "saveModel()". Or maybe we can just save the whole job to disk every retry and save the hassle.
+* If a persistent job fails to complete and it will be re-run, first save its current state to disk so that running it again will have th previous state. This should be documented. Maybe this behaviour can be confifured.
+* Write a section on performance (better done after more core tasks are completed) [memory, cpu, threading].
+* When starting up the JobManager and jobs are added from disk, jobs should be added in priority order; or the ExecutorService should be locked from spinning up Threads until all these jobs have been added.
+* Updated sample application so that logcat is not required to analyze jobs.
+* Change NetworkBroadcastReceiver so that it runs in a background thread.
 
 Where does the JobManager live?
 -------------------------------

@@ -16,6 +16,8 @@ public abstract class JobManagerBackground {
 
     /**
      * Queues the {@link Job} to be executed. If the {@link Job} is persistent then it will be written to disk first.
+     *
+     * Calls to {@link #addJob(Job)} are async.
      */
     public void addJob(final @NonNull Job job) {
         mJobManagerThread.post(new Runnable() {
@@ -29,6 +31,8 @@ public abstract class JobManagerBackground {
     /**
      * This will be called when the JobManager is built. It will fetch jobs from disk and add them to the
      * mPriorityJobExecutor.
+     *
+     * Calls to {@link #start()} are async.
      */
     protected void start() {
         mJobManagerThread.post(new Runnable() {
