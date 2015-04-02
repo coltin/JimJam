@@ -15,7 +15,7 @@ import static com.coldroid.jimjam.NetworkBroadcastReceiver.NetworkStateListener;
 
 /**
  * The following comment is <s>probably</s> definitely LIES AND DECEIT. I'm writing what it WILL support as if it's
- * already supported . SO TRICKY!
+ * already supported. SO TRICKY!
  *
  * The JobManager can be used to manage various kinds of {@link Job}'s that you will create. These Jobs are discrete
  * units of work that may take a lot of time to process, or things you want to have some guarantee will happen. If the
@@ -27,12 +27,11 @@ import static com.coldroid.jimjam.NetworkBroadcastReceiver.NetworkStateListener;
  * configure it to be persistent.
  */
 public class JobManager extends JobManagerBackground {
+    private final List<Job> mWaitingForNetwork = new LinkedList<>();
     private JobLogger mJobLogger;
     private NetworkUtils mNetworkUtils;
     private ExecutorService mPriorityJobExecutor;
     private JobDatabase mJobDatabase;
-
-    private List<Job> mWaitingForNetwork;
 
     /**
      * To create the JobManager, use the {@link Builder}.
@@ -90,14 +89,14 @@ public class JobManager extends JobManagerBackground {
         mJobDatabase.dumpDatabase();
     }
 
-    private NetworkStateListener mNetworkStateListener = new NetworkStateListener() {
+    private final NetworkStateListener mNetworkStateListener = new NetworkStateListener() {
         /**
          * When the network connects, we will push mWaitingForNetwork to the PriorityJobExecutor, which
          * represents a "ready to run" state. mWaitingForNetwork will be empty after this call.
          */
         @Override
         public void networkConnected() {
-            mJobLogger.d("Received 'network connected' event");
+            mJobLogger.d("Received 'network connected' event, posting this to background thread");
             List<Job> temporaryList;
             synchronized (mWaitingForNetwork) {
                 temporaryList = new LinkedList<>(mWaitingForNetwork);
@@ -135,7 +134,7 @@ public class JobManager extends JobManagerBackground {
         }
 
         @Override
-        public int compareTo(RunnableJob otherRunnable) {
+        public int compareTo(@NonNull RunnableJob otherRunnable) {
             return mJob.compareTo(otherRunnable.mJob);
         }
 
@@ -215,7 +214,6 @@ public class JobManager extends JobManagerBackground {
                 mJobSerializer = new DefaultJobSerializer(mJobManager.mJobLogger);
             }
             mJobManager.mNetworkUtils = new NetworkUtils(mContext);
-            mJobManager.mWaitingForNetwork = new LinkedList<>();
             mJobManager.mJobDatabase = new JobDatabase(mContext, mJobSerializer);
             mJobManager.mPriorityJobExecutor = newThreadExecutorService();
             // Block until the looper is setup.

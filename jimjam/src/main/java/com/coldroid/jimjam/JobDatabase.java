@@ -41,13 +41,11 @@ public class JobDatabase extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase database) {
-        StringBuilder createTable = new StringBuilder();
-        createTable.append("CREATE TABLE ").append(TABLE_JOBS);
-        createTable.append("(");
-        createTable.append(COLUMN_ID).append(" integer primary key autoincrement");
-        createTable.append(", ").append(COLUMN_SERIALIZED_JOB).append(" BLOB");
-        createTable.append(")");
-        database.execSQL(createTable.toString());
+        database.execSQL("CREATE TABLE " + TABLE_JOBS
+                + "("
+                + COLUMN_ID + " integer primary key autoincrement"
+                + ", " + COLUMN_SERIALIZED_JOB + " BLOB" +
+                ")");
     }
 
     @Override
@@ -83,21 +81,24 @@ public class JobDatabase extends SQLiteOpenHelper {
      * TODO: This will be called when the job is running and is marked as persistent to update the attempts. Might not
      * be a great idea. We shall seeee.
      */
+    @SuppressWarnings({"EmptyMethod", "UnusedParameters"})
     public void updateJob(Job mJob) {
-
+        // Intentionally empty, for now.
     }
 
     public @NonNull List<Job> fetchJobs() {
         SQLiteDatabase database = getReadableDatabase();
         Cursor cursor = database.rawQuery(SQL_QUERY_FETCH_JOBS, null);
         if (cursor == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.<Job>emptyList();
         }
-        List<Job> resultJobs = new ArrayList<Job>(cursor.getCount());
+        List<Job> resultJobs = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
             Job deserializedJob = mJobSerializer.deserialize(cursor.getBlob(1));
-            deserializedJob.setRowIdId(cursor.getLong(0));
-            resultJobs.add(deserializedJob);
+            if (deserializedJob != null) {
+                deserializedJob.setRowIdId(cursor.getLong(0));
+                resultJobs.add(deserializedJob);
+            }
         }
         cursor.close();
         database.close();

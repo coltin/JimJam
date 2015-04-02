@@ -11,8 +11,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Provides a default implementation of serialization for the {@link JobManager}. This will be used if none is
- * supplied to {@link JobManager.Builder}.
+ * Provides a default implementation of serialization for the {@link JobManager}. This will be used if none is supplied
+ * to {@link JobManager.Builder}.
  */
 public final class DefaultJobSerializer implements JobSerializer {
 
@@ -23,7 +23,7 @@ public final class DefaultJobSerializer implements JobSerializer {
     }
 
     /**
-     * Consumes a {@Link Job} and attempts to serialize it to a byte array using regular java serialization. Any error
+     * Consumes a {@link Job} and attempts to serialize it to a byte array using regular java serialization. Any error
      * will return null.
      *
      * Note: {@link ByteArrayOutputStream} does not need to be closed.

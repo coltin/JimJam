@@ -4,8 +4,8 @@ import android.support.annotation.NonNull;
 
 /**
  * This class is meant to be extended by {@link JobManager}. It abstracts away all the gross background thread
- * crazyness. Essentially these methods wrap actual implementations inside of {@link JobManager} so its code can stay
- * nice and clean.
+ * craziness. Essentially these methods wrap actual implementations inside of {@link JobManager} so its code can stay
+ * nice and clean and it's clear what's running on the UI thread and what's on background threads.
  */
 public abstract class JobManagerBackground {
     protected JobManagerThread mJobManagerThread;
@@ -17,7 +17,7 @@ public abstract class JobManagerBackground {
     /**
      * Queues the {@link Job} to be executed. If the {@link Job} is persistent then it will be written to disk first.
      *
-     * Calls to {@link #addJob(Job)} are async.
+     * Calls to this method are async.
      */
     public void addJob(final @NonNull Job job) {
         mJobManagerThread.post(new Runnable() {
@@ -32,7 +32,7 @@ public abstract class JobManagerBackground {
      * This will be called when the JobManager is built. It will fetch jobs from disk and add them to the
      * mPriorityJobExecutor.
      *
-     * Calls to {@link #start()} are async.
+     * Calls to this method are async.
      */
     protected void start() {
         mJobManagerThread.post(new Runnable() {

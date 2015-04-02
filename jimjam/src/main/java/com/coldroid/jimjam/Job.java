@@ -54,10 +54,7 @@ public abstract class Job implements Serializable, Comparable<Job> {
     }
 
     @Override
-    public int compareTo(Job otherJob) {
-        if (otherJob == null) {
-            return 1;
-        }
+    public int compareTo(@NonNull Job otherJob) {
         return mJobPriority.compareTo(otherJob.mJobPriority);
     }
 
@@ -69,6 +66,7 @@ public abstract class Job implements Serializable, Comparable<Job> {
      * Called when a job run fails and shouldRetry() returned false. This is a hook that jobs can optionally override to
      * know when their job will not be retried anymore.
      */
+    @SuppressWarnings("EmptyMethod")
     public void failedToComplete() {
         // Intentionally empty.
     }

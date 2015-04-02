@@ -7,7 +7,7 @@ import android.support.annotation.Nullable;
 
 public class NetworkBroadcastReceiver extends BroadcastReceiver {
     public interface NetworkStateListener {
-        public void networkConnected();
+        void networkConnected();
     }
 
     private static NetworkStateListener sNetworkStateListener;

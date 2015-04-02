@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -22,7 +21,7 @@ import android.widget.Toast;
  * An Android bus system would also be super awesome here, but this sample application will be native Android only.
  */
 public class JobBroadcastReceiver extends BroadcastReceiver {
-    private static final String ACTION_JOB_MESSAGE = "com.coldroid.jimjam.sample.jobmessage";
+    private static final String ACTION_JOB_MESSAGE = "com.coldroid.jimjam.sample.job_message";
     private static final String EXTRA_JOB_MESSAGE = "job_message";
 
     @Override
