@@ -11,8 +11,6 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static com.coldroid.jimjam.NetworkBroadcastReceiver.NetworkStateListener;
-
 /**
  * The following comment is <s>probably</s> definitely LIES AND DECEIT. I'm writing what it WILL support as if it's
  * already supported. SO TRICKY!
@@ -56,17 +54,32 @@ public class JobManager extends JobManagerBackground {
 
     /**
      * This will be called when the JobManager is built. It will fetch jobs from disk and add them to the
-     * mPriorityJobExecutor.
+     * mPriorityJobExecutor. It will also setup the listener for network events.
      *
      * Should be called only from a background thread. See {@link JobManagerBackground#start()}.
      */
     @Override
     protected void startBackground() {
-        // TODO: The mNetworkStateListener.networkConnected() should be posted to the background thread. So we listen
-        // for the events right away, register the Jobs, and then receive the events.
         NetworkBroadcastReceiver.registerListener(mNetworkStateListener);
         for (Job job : mJobDatabase.fetchJobs()) {
             addJobBackground(job);
+        }
+    }
+
+    /**
+     * When the network connects, we will push mWaitingForNetwork to the PriorityJobExecutor, which represents a "ready
+     * to run" state. mWaitingForNetwork will be empty after this call.
+     */
+    @Override
+    public void networkConnectedBackground() {
+        mJobLogger.d("Received 'network connected' event, posting this to background thread");
+        List<Job> temporaryList;
+        synchronized (mWaitingForNetwork) {
+            temporaryList = new LinkedList<>(mWaitingForNetwork);
+            mWaitingForNetwork.clear();
+        }
+        for (Job job : temporaryList) {
+            addJob(job);
         }
     }
 
@@ -89,25 +102,6 @@ public class JobManager extends JobManagerBackground {
         mJobDatabase.dumpDatabase();
     }
 
-    private final NetworkStateListener mNetworkStateListener = new NetworkStateListener() {
-        /**
-         * When the network connects, we will push mWaitingForNetwork to the PriorityJobExecutor, which
-         * represents a "ready to run" state. mWaitingForNetwork will be empty after this call.
-         */
-        @Override
-        public void networkConnected() {
-            mJobLogger.d("Received 'network connected' event, posting this to background thread");
-            List<Job> temporaryList;
-            synchronized (mWaitingForNetwork) {
-                temporaryList = new LinkedList<>(mWaitingForNetwork);
-                mWaitingForNetwork.clear();
-            }
-            for (Job job : temporaryList) {
-                addJob(job);
-            }
-        }
-    };
-
     /**
      * This class wraps jobs and allows them to be scheduled/run by mPriorityJobExecutor.
      */
@@ -122,7 +116,7 @@ public class JobManager extends JobManagerBackground {
         public void run() {
             try {
                 if (rescheduleNetworkJob()) {
-                    // We return early because the job has been scheduled for later execution.
+                    // We short circuit because the job has been scheduled for later execution.
                     return;
                 }
                 mJob.incrementRuns();
@@ -144,9 +138,9 @@ public class JobManager extends JobManagerBackground {
          * connection event occurs, and these jobs will be added back to mPriorityJobExecutor.
          *
          * We synchronize on mWaitingForNetwork because the network can connect/disconnect at will. If the network
-         * connects and mNetworkStateListener.networkConnected() is called right before we add the job to
-         * mWaitingForNetwork, it will sit there until the network disconnects and then reconnects. Since we lock on
-         * mWaitingForNetwork, and so does networkConnected(), we will add jobs to mWaitingForNetwork in two cases:
+         * connects and networkConnectedBackground() is called right before we add the job to mWaitingForNetwork, it
+         * will sit there until the network disconnects and then reconnects. Since we lock on mWaitingForNetwork, and so
+         * does networkConnected(), we will add jobs to mWaitingForNetwork in two cases:
          *
          * 1. rescheduleNetworkJob() enters synchronized block first, sees there is a bad connection, adds itself to the
          * queue. Then networkConnected() can run and it processes the job. Woo!
