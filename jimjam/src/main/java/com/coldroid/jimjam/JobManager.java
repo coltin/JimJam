@@ -116,13 +116,16 @@ public class JobManager extends JobManagerBackground {
         public void run() {
             try {
                 if (rescheduleNetworkJob()) {
+                    mJobLogger.d("Network was down trying to run network job, rescheduled.");
                     // We short circuit because the job has been scheduled for later execution.
                     return;
                 }
                 mJob.incrementRuns();
+                mJobLogger.d("Attempting to run job");
                 mJob.run();
                 jobSuccess();
             } catch (Exception exception) {
+                mJobLogger.e("Job failed to execute", exception);
                 jobFailedWithException(exception);
             }
         }
@@ -181,7 +184,7 @@ public class JobManager extends JobManagerBackground {
                 if (mJob.isPersistent()) {
                     mJobDatabase.updateJob(mJob);
                 }
-                mPriorityJobExecutor.submit(new RunnableJob(mJob));
+                mPriorityJobExecutor.execute(new RunnableJob(mJob));
             } else {
                 mJobDatabase.removeJob(mJob);
                 mJob.failedToComplete();
