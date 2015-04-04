@@ -6,10 +6,7 @@ import android.support.annotation.Nullable;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * The following comment is <s>probably</s> definitely LIES AND DECEIT. I'm writing what it WILL support as if it's
@@ -28,7 +25,7 @@ public class JobManager extends JobManagerBackground {
     private final List<Job> mWaitingForNetwork = new LinkedList<>();
     private JobLogger mJobLogger;
     private NetworkUtils mNetworkUtils;
-    private ExecutorService mPriorityJobExecutor;
+    private ThreadPoolExecutor mPriorityJobExecutor;
     private JobDatabase mJobDatabase;
 
     /**
@@ -229,8 +226,9 @@ public class JobManager extends JobManagerBackground {
             return this;
         }
 
-        private static @NonNull ExecutorService newThreadExecutorService() {
-            return new ThreadPoolExecutor(0, 3, 300L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<Runnable>());
+        private static @NonNull ThreadPoolExecutor newThreadExecutorService() {
+            ThreadPoolExecutor threadPoolExecutor = new PriorityThreadPoolExecutor(0, 3, 3000L);
+            return threadPoolExecutor;
         }
     }
 }

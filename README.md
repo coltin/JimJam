@@ -23,7 +23,6 @@ This is not necessarily in any order.
 * Fix the project directory structure so it's not so flat! :)
 * Create a section of this READEME that is dedicated to the sample application. How it works, how it can be used, etc.
 * Make calls to JobManager async (mostly done with JobManagerThread).
-* Fix issue with the ExecutorService only spinning up one thread in its pool, even with plenty of jobs.
 * Add job lifecycle methods so that application developers can hook into them as desired. (partially done)
 * Allow a job to cancel? Seems like this is unnecessary given a job can throw an exception to cancel itself. Having something outside the job cancel might be useful.
 * If a persistent job fails to complete and it will be re-run, first save its current state to disk so that running it again will have th previous state. This should be documented. Maybe this behaviour can be confifured.
@@ -31,6 +30,14 @@ This is not necessarily in any order.
 * When starting up the JobManager and jobs are added from disk, jobs should be added in priority order; or the ExecutorService should be locked from spinning up Threads until all these jobs have been added.
 * Updated sample application so that logcat is not required to analyze jobs.
 * Change NetworkBroadcastReceiver so that it runs in a background thread.
+* Investigate "IllegalStateException: Cannot perform this operation because the connection pool has been closed." issues.
+* Use github issues and wiki instead of having everything in the Readme.
+
+PriorityThreadPoolExecutor
+--------------------------
+This is a temporary section. I'm not completely happy with my PriorityThreadPoolExecutor. I feel like when the PriorityRejectedExecutionHandler.rejectedExecution() method is called there is a small chance that a thread can finish and be ready to take a job but the queue is empty, and THEN the job gets added to the queue. The ThreadPoolExecutor implementation does NOT hold a lock when calling rejectedExecution(), so this ordering seems plausible. It should be extremely rare, but I'm not happy that it might exist.
+
+Because most of ThreadPoolExecutor methods are either final or private it makes it really tricky to solve this without writing my own ThreadPoolExecutor. I'll leave this alone for now, and keep this section as a reminder. 
 
 Where does the JobManager live?
 -------------------------------

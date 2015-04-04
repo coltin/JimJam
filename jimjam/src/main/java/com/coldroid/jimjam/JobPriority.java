@@ -5,5 +5,5 @@ package com.coldroid.jimjam;
  * JobParameters class on Job creation.
  */
 public enum JobPriority {
-    LOW, MEDIUM, HIGH
+    HIGH, MEDIUM, LOW
 }
