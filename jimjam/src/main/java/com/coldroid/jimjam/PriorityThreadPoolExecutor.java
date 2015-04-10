@@ -3,7 +3,6 @@ package com.coldroid.jimjam;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Executor;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -14,55 +13,54 @@ import java.util.concurrent.TimeUnit;
  * available Runnables.<p/>
  *
  * When you call {@link Executor#execute(Runnable)} the normal behaviour for ThreadPoolExeuctors is to add new threads
- * until reaching the "minimum" number of threads is reached. At this point further calls to execute will be added to
- * the queue,
- * even if the number of threads is under the max thread limit. Only when the queue is full and {@link
+ * until reaching the "minimumPoolSize" or 1, whichever is higher. At this point further calls to execute will be added
+ * to the queue, even if the number of threads is under the max thread limit. Only when the queue is full and {@link
  * BlockingDeque#offer(Object)} returns false (meaning it can't add any more) will the ThreadPoolExecutor increase the
- * threads. If the queue is full and the thread limit is at max the ThreadPoolExecutor will drop the runnable.<p/>
+ * threads. If the queue is full and the thread limit is at max the ThreadPoolExecutor will drop the Runnable.<p/>
  *
  * Because we use an unbounded queue, we will accept Runnables until memory runs out, and there will only ever be the
- * minimum number of threads (or 1 thread if the minimum is 0). To work around this, we provide our own {@link
- * PriorityExecutorBlockingQueue PriorityQueue} implementation. We will fail all calls to offer(Runnable), forcing the
- * ThreadPoolExecutor to always increase the number of threads (because it thinks the queue is full). When the max
- * number of threads is reached and another Runnable is passed in, {@link RejectedExecutionHandler#rejectedExecution
- * (Runnable, ThreadPoolExecutor)} is called. <p/>
- *
- * Here we provide our own implementation of RejectedExecutionHandler() which will add the Runnable to the queue by
- * calling the queues add(E) method which will add the Runnable to the queue. When a Runnable finishes executing in a
- * Thread, the PriorityThreadPoolExecutor will dequeue the highest priority task from the queue and execute it.
+ * minimum number of threads. To work around this, we provide our own {@link PriorityExecutorBlockingQueue
+ * PriorityQueue} implementation. This queue has access to the Executor, so when it sees that more threads can be
+ * created it will reject new Runnables, forcing the Executor to spin up a new thread. If the number of workers has
+ * reached capacity, then the queue will add the Runnable for later processing when a worker frees up.
  */
 public class PriorityThreadPoolExecutor extends ThreadPoolExecutor {
 
     public PriorityThreadPoolExecutor(int minimumPoolSize, int maximumPoolSize, long threadKeepAliveMillis) {
-        super(minimumPoolSize, maximumPoolSize, threadKeepAliveMillis, TimeUnit.MILLISECONDS, new
-                PriorityExecutorBlockingQueue<Runnable>(), new PriorityRejectedExecutionHandler());
+        super(minimumPoolSize, maximumPoolSize, threadKeepAliveMillis, TimeUnit.MILLISECONDS,
+                new PriorityExecutorBlockingQueue());
+        ((PriorityExecutorBlockingQueue) getQueue()).setExecutor(this);
     }
 
-    private static class PriorityExecutorBlockingQueue<E> extends PriorityBlockingQueue<E> {
+    /**
+     * This {@link PriorityBlockingQueue} contains a reference to the {@link ThreadPoolExecutor} it lives in so that it
+     * can spy on the Executor, and make informed decisions. This helps us work around an issue in thread pools
+     * implementation when using unbounded queues. Instead of creating "max worker count" threads and then adding the
+     * overflow to the queue, the executor will create 1 thread and then try to add all new tasks to the queue. When the
+     * queue is full it will create new threads upto the max count. Since this queue is unbounded the executor will only
+     * ever create 1 thread. <p/>
+     *
+     * To work around this limitation, we will trick the executor and tell it there is no more room in the queue (return
+     * false on {@link #offer(Runnable)} if more workers/threads can be added to the queue. If all threads are working,
+     * then we will actually add the {@link Runnable} to the queue.
+     */
+    private static class PriorityExecutorBlockingQueue extends PriorityBlockingQueue<Runnable> {
+        private ThreadPoolExecutor mThreadPoolExecutor;
+
+        private void setExecutor(ThreadPoolExecutor threadPoolExecutor) {
+            mThreadPoolExecutor = threadPoolExecutor;
+        }
+
         /**
          * This method is overriden to force the {@link ThreadPoolExecutor} to actually create new threads above the
-         * minimum. See @{link PriorityThreadPoolExecutor} for a detailed explanation.
+         * minimum. See @{link PriorityExecutorBlockingQueue} for a detailed explanation.
          */
         @Override
-        public boolean offer(E e) {
+        public boolean offer(Runnable runnable) {
+            if (mThreadPoolExecutor.getPoolSize() == mThreadPoolExecutor.getMaximumPoolSize()) {
+                return super.offer(runnable);
+            }
             return false;
-        }
-
-        /**
-         * We override this method to allow {@link PriorityRejectedExecutionHandler#rejectedExecution(Runnable,
-         * ThreadPoolExecutor)} to call into the actual {@link PriorityBlockingQueue#offer(E)} method instead of {@link
-         * PriorityExecutorBlockingQueue#offer(Object)} which doesn't do anything.
-         */
-        @Override
-        public boolean add(E e) {
-            return super.offer(e);
-        }
-    }
-
-    private static class PriorityRejectedExecutionHandler implements RejectedExecutionHandler {
-        @Override
-        public void rejectedExecution(Runnable runnable, ThreadPoolExecutor executor) {
-            executor.getQueue().add(runnable);
         }
     }
 }
