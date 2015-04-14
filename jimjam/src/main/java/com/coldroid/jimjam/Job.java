@@ -6,9 +6,12 @@ import java.io.Serializable;
 import java.util.Locale;
 
 /**
- * Using the {@link JobManager} requires creating subclasses of Job to be added to the JobManager. You can configure
- * your job by passing the constructor a {@link JobParameters} to the constructor. Fields that are not-serializable will
- * not be persisted to disk. Mark fields that do not need to be persisted as "transient".
+ * This is the base class used for {@link Job Jobs} you want managed by the {@link JobManager}. The constructor must
+ * call into the super and pass a {@link JobParameters} which configures whether the job needs the network, should be
+ * persisted to disk, and what it's priority should be for scheduling purposes.
+ *
+ * Jobs are saved to disk through regular Java serialization. Any fields that shouldn't be written to disk should be
+ * marked `transient`.
  */
 public abstract class Job implements Serializable, Comparable<Job> {
     private static long serialVersionUID = 1L;
@@ -101,6 +104,10 @@ public abstract class Job implements Serializable, Comparable<Job> {
      */
     public final boolean shouldRetry(Exception exception) {
         return shouldRetry(mRunAttempts, exception);
+    }
+
+    public int getPriority() {
+        return mJobPriority.ordinal();
     }
 
     /**

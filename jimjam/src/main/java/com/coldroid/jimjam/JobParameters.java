@@ -1,5 +1,8 @@
 package com.coldroid.jimjam;
 
+/**
+ * Simple builder style class, allowing you to configure {@link Job Jobs}.
+ */
 public final class JobParameters {
     private static final JobPriority DEFAULT_JOB_PRIORITY = JobPriority.LOW;
     private static final boolean DEFAULT_REQUIRES_NETWORK = false;

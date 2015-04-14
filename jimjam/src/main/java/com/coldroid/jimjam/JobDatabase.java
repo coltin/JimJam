@@ -23,13 +23,15 @@ import java.util.List;
  * to provide an in-memory mock for testing. Will keep it in mind, but this is not currently supported.
  */
 public class JobDatabase extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "JOB_DATABASE";
     private static final String TABLE_JOBS = "jobs";
     private static final String COLUMN_ID = "id";
+    private static final String COLUMN_PRIORITY = "priority";
     private static final String COLUMN_SERIALIZED_JOB = "serialized_job";
-    private static final String SQL_QUERY_FETCH_JOBS =
-            "SELECT " + COLUMN_ID + "," + COLUMN_SERIALIZED_JOB + " FROM " + TABLE_JOBS;
+    private static final String SQL_QUERY_FETCH_JOBS = String.format("SELECT %s,%s,%s FROM %s", COLUMN_ID,
+            COLUMN_PRIORITY, COLUMN_SERIALIZED_JOB, TABLE_JOBS);
+    private static final String SQL_QUERY_FETCH_JOBS_SORTED = SQL_QUERY_FETCH_JOBS + " ORDER BY " + COLUMN_PRIORITY;
     private static final String ROW_DELETE_WHERE = COLUMN_ID + "=?";
 
     private final JobSerializer mJobSerializer;
@@ -41,11 +43,11 @@ public class JobDatabase extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase database) {
-        database.execSQL("CREATE TABLE " + TABLE_JOBS
-                + "("
+        database.execSQL("CREATE TABLE " + TABLE_JOBS + "("
                 + COLUMN_ID + " integer primary key autoincrement"
-                + ", " + COLUMN_SERIALIZED_JOB + " BLOB" +
-                ")");
+                + ", " + COLUMN_PRIORITY + " INTEGER"
+                + ", " + COLUMN_SERIALIZED_JOB + " BLOB"
+                + ")");
     }
 
     @Override
@@ -54,20 +56,20 @@ public class JobDatabase extends SQLiteOpenHelper {
         onCreate(database);
     }
 
-    public void persistJob(@NonNull Job job) {
+    public synchronized void persistJob(@NonNull Job job) {
         ContentValues contentValues = new ContentValues();
+        contentValues.put(COLUMN_PRIORITY, job.getPriority());
         contentValues.put(COLUMN_SERIALIZED_JOB, mJobSerializer.serialize(job));
         SQLiteDatabase database = getWritableDatabase();
-        long rowId = database.insert(TABLE_JOBS, null, contentValues);
+        job.setRowIdId(database.insert(TABLE_JOBS, null, contentValues));
         database.close();
-        job.setRowIdId(rowId);
     }
 
     /**
      * This will attempt to remove the supplied job from the database. If the job is not found or doesn't have an
      * associated rowId, it will silently return.
      */
-    public void removeJob(@NonNull Job job) {
+    public synchronized void removeJob(@NonNull Job job) {
         long rowId = job.getRowId();
         if (rowId == -1) {
             return;
@@ -82,19 +84,20 @@ public class JobDatabase extends SQLiteOpenHelper {
      * be a great idea. We shall seeee.
      */
     @SuppressWarnings({"EmptyMethod", "UnusedParameters"})
-    public void updateJob(Job mJob) {
+    public synchronized void updateJob(Job mJob) {
         // Intentionally empty, for now.
     }
 
-    public @NonNull List<Job> fetchJobs() {
+    public synchronized @NonNull List<Job> fetchJobs(boolean sorted) {
         SQLiteDatabase database = getReadableDatabase();
-        Cursor cursor = database.rawQuery(SQL_QUERY_FETCH_JOBS, null);
+        Cursor cursor = database.rawQuery(sorted ? SQL_QUERY_FETCH_JOBS_SORTED : SQL_QUERY_FETCH_JOBS, null);
         if (cursor == null) {
-            return Collections.<Job>emptyList();
+            database.close();
+            return Collections.emptyList();
         }
         List<Job> resultJobs = new ArrayList<>(cursor.getCount());
         while (cursor.moveToNext()) {
-            Job deserializedJob = mJobSerializer.deserialize(cursor.getBlob(1));
+            Job deserializedJob = mJobSerializer.deserialize(cursor.getBlob(2));
             if (deserializedJob != null) {
                 deserializedJob.setRowIdId(cursor.getLong(0));
                 resultJobs.add(deserializedJob);
@@ -106,9 +109,9 @@ public class JobDatabase extends SQLiteOpenHelper {
     }
 
     /**
-     * Will not be available in final version. Deletes/removes all jobs.
+     * TODO: Will not be available in final version. Deletes/removes all jobs.
      */
-    public void dumpDatabase() {
+    public synchronized void dumpDatabase() {
         SQLiteDatabase database = getWritableDatabase();
         database.execSQL("DROP TABLE IF EXISTS " + TABLE_JOBS);
         onCreate(database);

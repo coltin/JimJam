@@ -2,30 +2,22 @@ package com.coldroid.jimjam;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * The following comment is <s>probably</s> definitely LIES AND DECEIT. I'm writing what it WILL support as if it's
- * already supported. SO TRICKY!
- *
- * The JobManager can be used to manage various kinds of {@link Job}'s that you will create. These Jobs are discrete
- * units of work that may take a lot of time to process, or things you want to have some guarantee will happen. If the
- * Android system kills your app, it crashes, or the phone reboots, the JobManager can be configured to persist these
- * jobs to disk before they are started. Persisted Jobs will be restarted once your app starts the JobManager until it
- * finishes or runs out of retries.
- *
- * Private member fields in your {@link Job} that are Serializable will auto-magically be written to disk if you
- * configure it to be persistent.
+ * The JobManager processes and cares for {@link Job Jobs}. Jobs are discrete units of work that may take a lot of time
+ * to process, or things you want to have some guarantee will happen. If the Android system kills your app, it crashes,
+ * or the phone reboots, the JobManager can be configured to persist these jobs to disk before they "run", allowing them
+ * to be restarted the next time you initialize your JobManager.
  */
 public class JobManager extends JobManagerBackground {
     private final List<Job> mWaitingForNetwork = new LinkedList<>();
     private JobLogger mJobLogger;
     private NetworkUtils mNetworkUtils;
-    private ThreadPoolExecutor mPriorityJobExecutor;
+    private ThreadPoolExecutor mJobExecutor;
     private JobDatabase mJobDatabase;
 
     /**
@@ -35,7 +27,7 @@ public class JobManager extends JobManagerBackground {
     }
 
     /**
-     * Adds the Job to the mPriorityJobExecutor. Will store the Job to disk first if it's set to be persistent.
+     * Adds the Job to the mJobExecutor. Will store the Job to disk first if it's set to be persistent.
      *
      * Should be called only from a background thread. See {@link JobManagerBackground#addJob(Job)}.
      */
@@ -45,20 +37,20 @@ public class JobManager extends JobManagerBackground {
             mJobDatabase.persistJob(job);
         }
         job.addedToQueue();
-        mPriorityJobExecutor.execute(new RunnableJob(job));
+        mJobExecutor.execute(new RunnableJob(job));
         mJobLogger.d("Job queued in priority executor");
     }
 
     /**
-     * This will be called when the JobManager is built. It will fetch jobs from disk and add them to the
-     * mPriorityJobExecutor. It will also setup the listener for network events.
+     * This will be called when the JobManager is built. It will fetch jobs from disk and add them to the mJobExecutor.
+     * It will also setup the listener for network events.
      *
      * Should be called only from a background thread. See {@link JobManagerBackground#start()}.
      */
     @Override
     protected void startBackground() {
         NetworkBroadcastReceiver.registerListener(mNetworkStateListener);
-        for (Job job : mJobDatabase.fetchJobs()) {
+        for (Job job : mJobDatabase.fetchJobs(true)) {
             addJobBackground(job);
         }
     }
@@ -86,7 +78,10 @@ public class JobManager extends JobManagerBackground {
     public void logDatabaseJobs() {
         mJobLogger.d("------Logging Jobs in DB Start------");
         int i = 1;
-        for (Job job : mJobDatabase.fetchJobs()) {
+        for (Job job : mJobDatabase.fetchJobs(false)) {
+            mJobLogger.d("Job #" + i++ + ": " + job.toString());
+        }
+        for (Job job : mJobDatabase.fetchJobs(true)) {
             mJobLogger.d("Job #" + i++ + ": " + job.toString());
         }
         mJobLogger.d("------Logging Jobs in DB Done-------");
@@ -100,7 +95,7 @@ public class JobManager extends JobManagerBackground {
     }
 
     /**
-     * This class wraps jobs and allows them to be scheduled/run by mPriorityJobExecutor.
+     * This class wraps jobs and allows them to be scheduled/run by mJobExecutor.
      */
     private class RunnableJob implements Runnable, Comparable<RunnableJob> {
         private final Job mJob;
@@ -135,7 +130,7 @@ public class JobManager extends JobManagerBackground {
         /**
          * This method checks whether the current job requires network access. If it does and there is no network
          * access, it will be added to the mWaitingForNetwork list. This list will be processed when the network
-         * connection event occurs, and these jobs will be added back to mPriorityJobExecutor.
+         * connection event occurs, and these jobs will be added back to mJobExecutor.
          *
          * We synchronize on mWaitingForNetwork because the network can connect/disconnect at will. If the network
          * connects and networkConnectedBackground() is called right before we add the job to mWaitingForNetwork, it
@@ -181,7 +176,7 @@ public class JobManager extends JobManagerBackground {
                 if (mJob.isPersistent()) {
                     mJobDatabase.updateJob(mJob);
                 }
-                mPriorityJobExecutor.execute(new RunnableJob(mJob));
+                mJobExecutor.execute(new RunnableJob(mJob));
             } else {
                 mJobDatabase.removeJob(mJob);
                 mJob.failedToComplete();
@@ -193,6 +188,9 @@ public class JobManager extends JobManagerBackground {
         private final JobManager mJobManager = new JobManager();
         private final Context mContext;
         private JobSerializer mJobSerializer;
+        private int mMinPoolSize = 0;
+        private int mMaxPoolSize = 3;
+        private long mThreadKeepAliveMillis = 500L;
 
         public Builder(@NonNull Context context) {
             mContext = context.getApplicationContext();
@@ -209,26 +207,36 @@ public class JobManager extends JobManagerBackground {
             }
             mJobManager.mNetworkUtils = new NetworkUtils(mContext);
             mJobManager.mJobDatabase = new JobDatabase(mContext, mJobSerializer);
-            mJobManager.mPriorityJobExecutor = newThreadExecutorService();
-            // Block until the looper is setup.
+            mJobManager.mJobExecutor =
+                    new PriorityThreadPoolExecutor(mMinPoolSize, mMaxPoolSize, mThreadKeepAliveMillis);
+            // Block until the looper is setup in the background thread.
             mJobManager.mJobManagerThread.getLooper();
             mJobManager.start();
             return mJobManager;
         }
 
-        public Builder customLogger(@Nullable JobLogger jobLogger) {
+        /**
+         * @param minPoolSize When there are no jobs running, the number of idle threads in the thread pool will remain
+         * at this level or higher. The default is 0.
+         * @param maxPoolSize This is how many concurrent jobs will execute at one time. The default is 3.
+         * @param threadKeepAliveMillis How long idle threads are kept around before being killed, down to the
+         * minPoolSize. Default value is 500.
+         */
+        public Builder configureExecutor(int minPoolSize, int maxPoolSize, long threadKeepAliveMillis) {
+            mMinPoolSize = minPoolSize;
+            mMaxPoolSize = maxPoolSize;
+            mThreadKeepAliveMillis = threadKeepAliveMillis;
+            return this;
+        }
+
+        public Builder customLogger(JobLogger jobLogger) {
             mJobManager.mJobLogger = jobLogger;
             return this;
         }
 
-        public Builder customSerializer(@Nullable JobSerializer jobSerializer) {
+        public Builder customSerializer(JobSerializer jobSerializer) {
             mJobSerializer = jobSerializer;
             return this;
-        }
-
-        private static @NonNull ThreadPoolExecutor newThreadExecutorService() {
-            ThreadPoolExecutor threadPoolExecutor = new PriorityThreadPoolExecutor(0, 3, 3000L);
-            return threadPoolExecutor;
         }
     }
 }
