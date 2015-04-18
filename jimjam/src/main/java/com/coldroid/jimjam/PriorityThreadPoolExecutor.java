@@ -1,5 +1,7 @@
 package com.coldroid.jimjam;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Executor;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -26,10 +28,46 @@ import java.util.concurrent.TimeUnit;
  */
 public class PriorityThreadPoolExecutor extends ThreadPoolExecutor {
 
+    private final List<Job> mWaitingForNetwork = new LinkedList<>();
+
     public PriorityThreadPoolExecutor(int minimumPoolSize, int maximumPoolSize, long threadKeepAliveMillis) {
         super(minimumPoolSize, maximumPoolSize, threadKeepAliveMillis, TimeUnit.MILLISECONDS,
                 new PriorityExecutorBlockingQueue());
         ((PriorityExecutorBlockingQueue) getQueue()).setExecutor(this);
+    }
+
+    /**
+     * Checks whether the current job requires network access. If it does and there is no network access, it will be
+     * added to the mWaitingForNetwork list. This list will be processed when the network connection event occurs, and
+     * these jobs will be added back to mJobExecutor's main queue for execution.
+     *
+     * @return boolean whether the job was rescheduled.
+     */
+    public boolean rescheduleNetworkJob(NetworkUtils networkUtils, Job job) {
+        if (!job.requiresNetwork()) {
+            return false;
+        }
+        synchronized (mWaitingForNetwork) {
+            if (networkUtils.isNetworkConnected()) {
+                return false;
+            } else {
+                mWaitingForNetwork.add(job);
+                return true;
+            }
+        }
+    }
+
+    /**
+     * When the network connects we will dump the jobs in the networks waiting queue, and return those jobs to be
+     * added to the the executor. The reason we don't add them ourselves is because the JobManager may want to do
+     * some pre-processing on those jobs first. In particular
+     */
+    public List<Job> networkConnected() {
+        synchronized (mWaitingForNetwork) {
+            List<Job> temporaryList = new LinkedList<>(mWaitingForNetwork);
+            mWaitingForNetwork.clear();
+            return temporaryList;
+        }
     }
 
     /**

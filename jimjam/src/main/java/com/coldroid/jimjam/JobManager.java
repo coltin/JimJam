@@ -3,9 +3,9 @@ package com.coldroid.jimjam;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import java.util.LinkedList;
+import com.coldroid.jimjam.NetworkBroadcastReceiver.NetworkStateListener;
+
 import java.util.List;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * The JobManager processes and cares for {@link Job Jobs}. Jobs are discrete units of work that may take a lot of time
@@ -13,12 +13,12 @@ import java.util.concurrent.ThreadPoolExecutor;
  * or the phone reboots, the JobManager can be configured to persist these jobs to disk before they "run", allowing them
  * to be restarted the next time you initialize your JobManager.
  */
-public class JobManager extends JobManagerBackground {
-    private final List<Job> mWaitingForNetwork = new LinkedList<>();
-    private JobLogger mJobLogger;
-    private NetworkUtils mNetworkUtils;
-    private ThreadPoolExecutor mJobExecutor;
+public class JobManager {
+    private JobManagerThread mJobManagerThread;
+    private PriorityThreadPoolExecutor mJobExecutor;
     private JobDatabase mJobDatabase;
+    private NetworkUtils mNetworkUtils;
+    private JobLogger mJobLogger;
 
     /**
      * To create the JobManager, use the {@link Builder}.
@@ -27,49 +27,17 @@ public class JobManager extends JobManagerBackground {
     }
 
     /**
-     * Adds the Job to the mJobExecutor. Will store the Job to disk first if it's set to be persistent.
+     * Queues the {@link Job} to be executed. If the {@link Job} is persistent then it will be written to disk first.
      *
-     * Should be called only from a background thread. See {@link JobManagerBackground#addJob(Job)}.
+     * Calls to this method are async.
      */
-    @Override
-    protected void addJobBackground(@NonNull Job job) {
-        if (job.isPersistent() && job.getRowId() == -1) {
-            mJobDatabase.persistJob(job);
-        }
-        job.addedToQueue();
-        mJobExecutor.execute(new RunnableJob(job));
-        mJobLogger.d("Job queued in priority executor");
-    }
-
-    /**
-     * This will be called when the JobManager is built. It will fetch jobs from disk and add them to the mJobExecutor.
-     * It will also setup the listener for network events.
-     *
-     * Should be called only from a background thread. See {@link JobManagerBackground#start()}.
-     */
-    @Override
-    protected void startBackground() {
-        NetworkBroadcastReceiver.registerListener(mNetworkStateListener);
-        for (Job job : mJobDatabase.fetchJobs(true)) {
-            addJobBackground(job);
-        }
-    }
-
-    /**
-     * When the network connects, we will push mWaitingForNetwork to the PriorityJobExecutor, which represents a "ready
-     * to run" state. mWaitingForNetwork will be empty after this call.
-     */
-    @Override
-    public void networkConnectedBackground() {
-        mJobLogger.d("Received 'network connected' event, posting this to background thread");
-        List<Job> temporaryList;
-        synchronized (mWaitingForNetwork) {
-            temporaryList = new LinkedList<>(mWaitingForNetwork);
-            mWaitingForNetwork.clear();
-        }
-        for (Job job : temporaryList) {
-            addJob(job);
-        }
+    public void addJob(final @NonNull Job job) {
+        mJobManagerThread.post(new Runnable() {
+            @Override
+            public void run() {
+                addJobBackground(job);
+            }
+        });
     }
 
     /**
@@ -81,9 +49,6 @@ public class JobManager extends JobManagerBackground {
         for (Job job : mJobDatabase.fetchJobs(false)) {
             mJobLogger.d("Job #" + i++ + ": " + job.toString());
         }
-        for (Job job : mJobDatabase.fetchJobs(true)) {
-            mJobLogger.d("Job #" + i++ + ": " + job.toString());
-        }
         mJobLogger.d("------Logging Jobs in DB Done-------");
     }
 
@@ -93,6 +58,59 @@ public class JobManager extends JobManagerBackground {
     public void dumpDatabase() {
         mJobDatabase.dumpDatabase();
     }
+
+    /**
+     * This will be called when the JobManager is built. It will fetch jobs from disk and add them to the
+     * mPriorityJobExecutor.
+     *
+     * Calls to this method are async.
+     */
+    private void start() {
+        mJobManagerThread.post(new Runnable() {
+            @Override
+            public void run() {
+                NetworkBroadcastReceiver.registerListener(mNetworkStateListener);
+                for (Job job : mJobDatabase.fetchJobs(true)) {
+                    addJobBackground(job);
+                }
+            }
+        });
+    }
+
+    /**
+     * Adds the Job to the mJobExecutor. Will store the Job to disk first if it's set to be persistent.
+     *
+     * This method assumes it's being called from a background thread.
+     */
+    private void addJobBackground(@NonNull Job job) {
+        if (job.isPersistent() && job.getRowId() == -1) {
+            mJobDatabase.persistJob(job);
+            job.addedToQueue();
+        }
+        mJobExecutor.execute(new RunnableJob(job));
+        mJobLogger.d("Job queued in priority executor");
+    }
+
+    private final NetworkStateListener mNetworkStateListener = new NetworkStateListener() {
+        /**
+         * This broadcast will be received on the main UI thread, so we propagate this to the background thread
+         * because {@link PriorityThreadPoolExecutor#networkConnected()} can block or potentially take up our
+         * precious CPU time.
+         */
+        @Override
+        public void networkConnected() {
+            mJobManagerThread.post(new Runnable() {
+                @Override
+                public void run() {
+                    mJobLogger.d("Received 'network connected' event, posting this to background thread");
+                    List<Job> temporaryJobList = mJobExecutor.networkConnected();
+                    for (Job job : temporaryJobList) {
+                        addJobBackground(job);
+                    }
+                }
+            });
+        }
+    };
 
     /**
      * This class wraps jobs and allows them to be scheduled/run by mJobExecutor.
@@ -107,7 +125,7 @@ public class JobManager extends JobManagerBackground {
         @Override
         public void run() {
             try {
-                if (rescheduleNetworkJob()) {
+                if (mJobExecutor.rescheduleNetworkJob(mNetworkUtils, mJob)) {
                     mJobLogger.d("Network was down trying to run network job, rescheduled.");
                     // We short circuit because the job has been scheduled for later execution.
                     return;
@@ -128,39 +146,6 @@ public class JobManager extends JobManagerBackground {
         }
 
         /**
-         * This method checks whether the current job requires network access. If it does and there is no network
-         * access, it will be added to the mWaitingForNetwork list. This list will be processed when the network
-         * connection event occurs, and these jobs will be added back to mJobExecutor.
-         *
-         * We synchronize on mWaitingForNetwork because the network can connect/disconnect at will. If the network
-         * connects and networkConnectedBackground() is called right before we add the job to mWaitingForNetwork, it
-         * will sit there until the network disconnects and then reconnects. Since we lock on mWaitingForNetwork, and so
-         * does networkConnected(), we will add jobs to mWaitingForNetwork in two cases:
-         *
-         * 1. rescheduleNetworkJob() enters synchronized block first, sees there is a bad connection, adds itself to the
-         * queue. Then networkConnected() can run and it processes the job. Woo!
-         *
-         * 2. networkConnected() enters the synchronized block first, dumps mWaitingForNetwork into the waiting queue .
-         * Then rescheduleNetworkJob() is called. If the network is still connected it will try to run the job. Woo! If
-         * the network is no longer connected it will add itself to the queue. Woo2! This is not an issue because we
-         * don't want to run when the network is disconnected.
-         *
-         * In 99.9% of cases this synchronized block is unnecessary, but it will keep jobs from being stuck in an
-         * unprocessed state, which would be nasty to diagnose so we err on the side of caution.
-         *
-         * @return boolean whether the job was rescheduled.
-         */
-        private boolean rescheduleNetworkJob() {
-            synchronized (mWaitingForNetwork) {
-                if (mJob.requiresNetwork() && !mNetworkUtils.isNetworkConnected()) {
-                    mWaitingForNetwork.add(mJob);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /**
          * Called when the job has successfully run to completion.
          */
         private void jobSuccess() {
@@ -169,7 +154,7 @@ public class JobManager extends JobManagerBackground {
 
         /**
          * Called when the job failed to run and threw an exception. This will reschedule the job if necessary (defined
-         * by the {@link Job#shouldRetry(int, Exception)}
+         * by the {@link Job#shouldRetry(int, Exception)}.
          */
         private void jobFailedWithException(Exception exception) {
             if (mJob.shouldRetry(exception)) {
