@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.coldroid.jimjam.NetworkBroadcastReceiver.NetworkStateListener;
+import com.coldroid.jimjam.queue.LabelledRunnable;
 
 import java.util.List;
 
@@ -115,7 +116,7 @@ public class JobManager {
     /**
      * This class wraps jobs and allows them to be scheduled/run by mJobExecutor.
      */
-    private class RunnableJob implements Runnable, Comparable<RunnableJob> {
+    private class RunnableJob implements LabelledRunnable<RunnableJob> {
         private final Job mJob;
 
         public RunnableJob(@NonNull Job job) {
@@ -133,11 +134,17 @@ public class JobManager {
                 mJob.incrementRuns();
                 mJobLogger.d("Attempting to run job");
                 mJob.run();
+                mJobLogger.d("Job run() complete");
                 jobSuccess();
             } catch (Exception exception) {
                 mJobLogger.e("Job failed to execute", exception);
                 jobFailedWithException(exception);
             }
+        }
+
+        @Override
+        public String getLabel() {
+            return mJob.getLabel();
         }
 
         @Override

@@ -23,7 +23,8 @@
             style="@style/button"
             android:id="@+id/wifi_toggler"
             android:textOff="Wifi OFF"
-            android:textOn="Wifi ON"/>
+            android:textOn="Wifi ON"
+            android:checked="false"/>
 
         <Button
             style="@style/button"
@@ -45,14 +46,41 @@
             android:id="@+id/new_job_button_log_sleep"
             android:text="@string/new_job_log_sleep"/>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/button_space_top"
+            android:orientation="horizontal">
+
+            <Button
+                style="@style/button"
+                android:id="@+id/new_labelled_job"
+                android:layout_width="0dp"
+                android:layout_weight="3"
+                android:layout_marginTop="0dp"
+                android:singleLine="true"
+                android:text="@string/new_labelled_job"/>
+
+            <EditText
+                android:id="@+id/edit_text_labelled_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_gravity="bottom"
+                android:textSize="22sp"
+                android:text="@string/default_label"/>
+        </LinearLayout>
+
         <Button
             style="@style/button"
             android:id="@+id/log_saved_jobs_to_logcat"
+            android:background="@drawable/background_greenable"
             android:text="@string/log_saved_jobs_to_logcat"/>
 
         <Button
             style="@style/button"
             android:id="@+id/dump_job_database"
+            android:background="@drawable/background_redable"
             android:text="@string/dump_job_database"/>
     </LinearLayout>
 </ScrollView>

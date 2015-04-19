@@ -11,7 +11,6 @@ import com.coldroid.jimjam.JobPriority;
 public class HighPriorityJob extends Job {
     public HighPriorityJob() {
         super(new JobParameters()
-                .setRequiresNetwork(false)
                 .setJobPriority(JobPriority.HIGH));
     }
 

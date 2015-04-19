@@ -10,7 +10,7 @@ import com.coldroid.jimjam.JobParameters;
 public class NeedsNetworkJob extends Job {
     public NeedsNetworkJob() {
         super(new JobParameters()
-                .setRequiresNetwork(true)
+                .setRequiresNetwork()
                 .setIsPersistent());
     }
 

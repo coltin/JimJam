@@ -1,5 +1,7 @@
 package com.coldroid.jimjam;
 
+import com.coldroid.jimjam.queue.LabelledBlockingPriorityQueue;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
@@ -29,11 +31,19 @@ import java.util.concurrent.TimeUnit;
 public class PriorityThreadPoolExecutor extends ThreadPoolExecutor {
 
     private final List<Job> mWaitingForNetwork = new LinkedList<>();
+    private final PriorityExecutorBlockingQueue mWorkerQueue;
 
     public PriorityThreadPoolExecutor(int minimumPoolSize, int maximumPoolSize, long threadKeepAliveMillis) {
         super(minimumPoolSize, maximumPoolSize, threadKeepAliveMillis, TimeUnit.MILLISECONDS,
                 new PriorityExecutorBlockingQueue());
-        ((PriorityExecutorBlockingQueue) getQueue()).setExecutor(this);
+        mWorkerQueue = (PriorityExecutorBlockingQueue) getQueue();
+        mWorkerQueue.setExecutor(this);
+    }
+
+    @Override
+    protected void afterExecute(Runnable runnable, Throwable throwable) {
+        super.afterExecute(runnable, throwable);
+        mWorkerQueue.unlockQueue(runnable);
     }
 
     /**
@@ -58,9 +68,9 @@ public class PriorityThreadPoolExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * When the network connects we will dump the jobs in the networks waiting queue, and return those jobs to be
-     * added to the the executor. The reason we don't add them ourselves is because the JobManager may want to do
-     * some pre-processing on those jobs first. In particular
+     * When the network connects we will dump the jobs in the networks waiting queue, and return those jobs to be added
+     * to the the executor. The reason we don't add them ourselves is because the JobManager may want to do some
+     * pre-processing on those jobs first. In particular
      */
     public List<Job> networkConnected() {
         synchronized (mWaitingForNetwork) {
@@ -82,7 +92,7 @@ public class PriorityThreadPoolExecutor extends ThreadPoolExecutor {
      * false on {@link #offer(Runnable)} if more workers/threads can be added to the queue. If all threads are working,
      * then we will actually add the {@link Runnable} to the queue.
      */
-    private static class PriorityExecutorBlockingQueue extends PriorityBlockingQueue<Runnable> {
+    private static class PriorityExecutorBlockingQueue extends LabelledBlockingPriorityQueue {
         private ThreadPoolExecutor mThreadPoolExecutor;
 
         private void setExecutor(ThreadPoolExecutor threadPoolExecutor) {
@@ -90,15 +100,27 @@ public class PriorityThreadPoolExecutor extends ThreadPoolExecutor {
         }
 
         /**
-         * This method is overriden to force the {@link ThreadPoolExecutor} to actually create new threads above the
-         * minimum. See @{link PriorityExecutorBlockingQueue} for a detailed explanation.
+         * This is overridden to force the {@link ThreadPoolExecutor} to actually create new threads above the minimum.
+         * See @{link PriorityExecutorBlockingQueue} for a detailed explanation.
+         *
+         * false would mean there is no room in the queue, create a worker.
+         *
+         * true would mean the {@link Runnable} was added to the queue, so don't create a worker for it.
          */
         @Override
         public boolean offer(Runnable runnable) {
-            if (mThreadPoolExecutor.getPoolSize() == mThreadPoolExecutor.getMaximumPoolSize()) {
-                return super.offer(runnable);
+            mLock.lock();
+            try {
+                if (mThreadPoolExecutor.getPoolSize() == mThreadPoolExecutor.getMaximumPoolSize()
+                        || isQueueLocked(runnable)) {
+                    return super.offer(runnable);
+                } else {
+                    lockQueue(runnable);
+                    return false;
+                }
+            } finally {
+                mLock.unlock();
             }
-            return false;
         }
     }
 }

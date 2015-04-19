@@ -7,4 +7,6 @@
     <string name="new_job_log_sleep">New Job: Log Sleep</string>
     <string name="log_saved_jobs_to_logcat">Log Saved Jobs to Logcat</string>
     <string name="dump_job_database">Dump Job Database</string>
+    <string name="new_labelled_job">New Labelled Job</string>
+    <string name="default_label">abc</string>
 </resources>

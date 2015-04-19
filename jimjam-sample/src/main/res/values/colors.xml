@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="forrest_green">#009900</color>
+    <color name="forrest_green_dark">#006B00</color>
+    <color name="nightmare_red">#E60000</color>
+    <color name="nightmare_red_dark">#B50000</color>
+</resources>

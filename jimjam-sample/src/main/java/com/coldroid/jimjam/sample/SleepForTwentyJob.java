@@ -14,7 +14,6 @@ public class SleepForTwentyJob extends Job {
 
     public SleepForTwentyJob() {
         super(new JobParameters()
-                .setRequiresNetwork(false)
                 .setIsPersistent());
         mId = new Random().nextInt() % 1000;
     }

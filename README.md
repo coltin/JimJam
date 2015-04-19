@@ -25,18 +25,21 @@ Some Random Information (before I create the wiki and actual documentation)
 ---------------------------------------------------------------------------
 
 * JobManager can be created+configured through JobManager.Builder. Do this when your Application gets created (either directly from the App, or a service you start there). It can live in either.
-* Sample application lets you tap on 3 different buttons to create jobs which get added to the JobManager. These jobs will run in background threads. A Toast is made when they are finished. The Network Job will not wait for the network (yet) and priority is used. If all threads are full of running jobs, a high priority job will NOT pre-empt a running job. If it's the highest priority Job it will run next.
+* Sample application lets you tap a few different buttons to create jobs which get added to the JobManager. These jobs will run in background threads. A Toast or logcat message is made when they are finished. If all threads are full of running jobs, a high priority job will NOT pre-empt a running job. If it's the highest priority Job it will run next.
 * Sample app has a button to print logs (to logcat) of all Jobs saved to disk. If you reboot your device, the persisted jobs will still show up. Jobs are removed when they complete. When an app is restarted persisted jobs will be added back into the queue. Note: The "High Priority" job is configured to be not-persistent.
-* Jobs are creatable with a JobParameters object which configures the job. Here you provide whether the job is persistent, requires the network, and the jobs "priority".
+* Jobs are creatable with a JobParameters object which configures the job. Here you provide whether the job is persistent, requires the network, hash a label, and the jobs "priority".
 * Job priority is specified as an enum. This will likely change to give more flexibility.
 * Jobs that require network access will not be run until the network is available. JobManager receives "network connected" events which it uses to push network jobs back into the priority queue.
-* Age of job is NOT taken into consideration for priority, only the priority flag passed on job creation.
+* Age of job is NOT taken into consideration for priority at this time, only the priority flag passed on job creation.
+* Multiple jobs with the same label will be executed one at a time. The ordering property is still the same as other jobs.
 * When a job fails (throws an exception during run()) a "shouldRetry()" method will be called on the Job (which it must implement). It will be passed the raised Exception as well as the retry count.
 
 What happens when we add a job?
 -------------------------------
 
 Also known as "what happens when your application or service calls your JobManager instances addJob() method".
+
+Note: Now that there is job labelling, this is slightly out of date. I added a TODO to update this.
 
 1. Your job is posted to the JobManager's background thread.
 2. The background thread will process the addJob() request.
@@ -55,12 +58,14 @@ This is not necessarily in any order.
 * Wiki. Wiki all the things. Plus these:
  * Seciton on performance: CPU, Memory, and Threading.
  * One on PriorityThreadPoolExecutor.
+ * Labelling. Simple to use, but implementation is more complicated than it looks.
 * Audit JobManager calls, and make sure everything is processed in the background.
 * Audit the network monitoring. Can we do it better?
 * Add job lifecycle methods which can overriden. Things like "onAdded()", "onLoaded()", etc.
 * When a persistent job run fails, re-serialize it to disk to save its state.
 * When starting up the JobManager and jobs are added from disk, jobs should be added in priority order.
 * Updated sample application so that logcat is not required to analyze jobs.
+* Update the "What happens when we add a job?" section to discuss labelling.
 
 License
 -------

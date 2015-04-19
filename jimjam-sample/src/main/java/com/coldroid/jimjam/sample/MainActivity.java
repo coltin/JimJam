@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.coldroid.jimjam.Job;
@@ -31,6 +32,8 @@ public class MainActivity extends Activity {
         attachJobBuilderToOnClick(R.id.new_job_button_sleep_for_twenty, new SleepForTwentyJob.Builder());
         attachJobBuilderToOnClick(R.id.new_job_button_needs_network, new NeedsNetworkJob.Builder());
         attachJobBuilderToOnClick(R.id.new_job_button_high_priority, new HighPriorityJob.Builder());
+        attachJobBuilderToOnClick(R.id.new_labelled_job, new LabelledJob.Builder(
+                (TextView) findViewById(R.id.edit_text_labelled_label)));
         attachJobBuilderToOnClick(R.id.new_job_button_log_sleep, new LogSleepJob.Builder());
         findViewById(R.id.log_saved_jobs_to_logcat).setOnClickListener(new OnClickListener() {
             @Override

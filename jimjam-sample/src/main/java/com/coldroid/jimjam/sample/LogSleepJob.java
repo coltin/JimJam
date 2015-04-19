@@ -15,7 +15,6 @@ public class LogSleepJob extends Job {
 
     public LogSleepJob() {
         super(new JobParameters()
-                .setRequiresNetwork(false)
                 .setIsPersistent());
         mId = new Random().nextInt() % 1000;
     }

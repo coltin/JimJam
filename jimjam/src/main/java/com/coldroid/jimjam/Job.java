@@ -18,12 +18,14 @@ public abstract class Job implements Serializable, Comparable<Job> {
     private final JobPriority mJobPriority;
     private final boolean mRequiresNetwork;
     private final boolean mIsPersistent;
+    private final String mLabel;
     private int mRunAttempts;
     private transient long mRowId;
 
     public Job(@NonNull JobParameters parameters) {
-        mRequiresNetwork = parameters.requiresNetwork;
         mJobPriority = parameters.jobPriority;
+        mLabel = parameters.label;
+        mRequiresNetwork = parameters.requiresNetwork;
         mIsPersistent = parameters.isPersistent;
         mRunAttempts = 0;
         // -1 indicates that the Job is not yet stored in a database table.
@@ -52,8 +54,9 @@ public abstract class Job implements Serializable, Comparable<Job> {
     @Override
     public String toString() {
         return String.format(Locale.US,
-                "Job Name: %s Job Fields\nmRequiresNetwork: %s\nmJobPriority: " + "%s\nisPersistent: %b\nDbRowId: %d",
-                getClass().getSimpleName(), mRequiresNetwork, mJobPriority, mIsPersistent, mRowId);
+                "Job Name: %s\nJob Label: %s\nJob Fields\nmRequiresNetwork: %s\nmJobPriority: %s\nisPersistent: " +
+                        "%b\nDbRowId: %d",
+                getClass().getSimpleName(), mLabel, mRequiresNetwork, mJobPriority, mIsPersistent, mRowId);
     }
 
     @Override
@@ -108,6 +111,10 @@ public abstract class Job implements Serializable, Comparable<Job> {
 
     public int getPriority() {
         return mJobPriority.ordinal();
+    }
+
+    public String getLabel() {
+        return mLabel;
     }
 
     /**
