@@ -1,7 +1,7 @@
 JimJam
 ======
 
-(This project is under active development, and is not ready to be used. Fork at your own risk!)
+(This is not ready to be used. Fork at your own risk! :D)
 
 A Job Manager for Android. Do you have something you need to guarantee happens, even if the device reboots or crashes before the task finishes running? JimJams got you covered! Want to do something once you have network connectivity, even if the network is currently dead? Not a problem, JimJam specializes in internet tube awareness. Want to feel fulfilled and happy in your life? Wow, JimJam does too! Such good friends already.
 
